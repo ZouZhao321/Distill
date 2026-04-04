@@ -3,5 +3,5 @@
 ok  	github.com/ZouZhao321/distill/internal/adapter	(cached)
 ?   	github.com/ZouZhao321/distill/internal/core/domain	[no test files]
 ?   	github.com/ZouZhao321/distill/internal/core/port	[no test files]
-ok  	github.com/ZouZhao321/distill/internal/core/usecase	0.031s
+ok  	github.com/ZouZhao321/distill/internal/core/usecase	0.029s
 ok  	github.com/ZouZhao321/distill/internal/infra/store	(cached)
