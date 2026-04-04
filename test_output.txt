@@ -1,7 +1,7 @@
 ?   	github.com/ZouZhao321/distill	[no test files]
 ?   	github.com/ZouZhao321/distill/cmd	[no test files]
-ok  	github.com/ZouZhao321/distill/internal/adapter	0.462s
+ok  	github.com/ZouZhao321/distill/internal/adapter	(cached)
 ?   	github.com/ZouZhao321/distill/internal/core/domain	[no test files]
 ?   	github.com/ZouZhao321/distill/internal/core/port	[no test files]
-ok  	github.com/ZouZhao321/distill/internal/core/usecase	(cached)
+ok  	github.com/ZouZhao321/distill/internal/core/usecase	0.031s
 ok  	github.com/ZouZhao321/distill/internal/infra/store	(cached)
