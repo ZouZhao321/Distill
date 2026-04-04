@@ -13,7 +13,7 @@ import (
 // AddAssetInput holds the input for adding an asset.
 type AddAssetInput struct {
 	Name    string
-	Content []byte          // single-file mode
+	Content []byte           // single-file mode
 	Tree    *domain.TreeNode // directory/ZIP mode
 	Source  string
 }

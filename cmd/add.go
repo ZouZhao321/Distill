@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/ZouZhao321/distill/internal/adapter"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
 	"github.com/ZouZhao321/distill/internal/infra/store"
+	"github.com/spf13/cobra"
 )
 
 var addName string

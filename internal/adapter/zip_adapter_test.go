@@ -29,8 +29,8 @@ func createTestZip(t *testing.T, files map[string]string) string {
 
 func TestZipAdapter_Adapt(t *testing.T) {
 	zipPath := createTestZip(t, map[string]string{
-		"main.go":    "package main",
-		"README.md":  "# Hello",
+		"main.go":     "package main",
+		"README.md":   "# Hello",
 		"lib/util.go": "package lib",
 	})
 
@@ -57,7 +57,7 @@ func TestZipAdapter_Adapt(t *testing.T) {
 
 func TestZipAdapter_Adapt_NestedPaths(t *testing.T) {
 	zipPath := createTestZip(t, map[string]string{
-		"src/main.go":   "package main",
+		"src/main.go":     "package main",
 		"src/lib/util.go": "package lib",
 	})
 

@@ -1,0 +1,2 @@
+# Go files: always LF
+*.go text eol=lf

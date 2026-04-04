@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
 	"github.com/ZouZhao321/distill/internal/infra/store"
+	"github.com/spf13/cobra"
 )
 
 var removeCmd = &cobra.Command{

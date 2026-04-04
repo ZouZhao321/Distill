@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
 	"github.com/ZouZhao321/distill/internal/infra/store"
+	"github.com/spf13/cobra"
 )
 
 var exportOutput string
