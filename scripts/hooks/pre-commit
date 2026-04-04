@@ -21,4 +21,11 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "[pre-commit] Running go test -short..."
+go test -short ./...
+if [ $? -ne 0 ]; then
+  echo "[ERROR] go test -short failed. Fix failing tests before committing."
+  exit 1
+fi
+
 echo "[pre-commit] All checks passed."
