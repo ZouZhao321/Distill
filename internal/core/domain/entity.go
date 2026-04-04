@@ -1,34 +1,34 @@
 package domain
 
-// Object represents a content-addressed object stored in the objects/ directory.
+// Object 表示存储在 objects/ 目录下的内容寻址对象。
 type Object struct {
-	Hash string // SHA-256 hex string
+	Hash string // SHA-256 十六进制字符串
 	Size int64
 }
 
-// TreeNode represents a node in the manifest directory tree.
+// TreeNode 表示清单目录树中的一个节点。
 type TreeNode struct {
-	Name     string     `json:"name"`     // file or directory name
-	Type     string     `json:"type"`     // "file" or "directory"
-	Size     int64      `json:"size"`     // file size (only for file type)
-	Object   string     `json:"object"`   // object path, e.g. "ab/cdef..." (only for file type)
-	Children []TreeNode `json:"children"` // child nodes (only for directory type)
+	Name     string     `json:"name"`     // 文件或目录名称
+	Type     string     `json:"type"`     // "file" 或 "directory"
+	Size     int64      `json:"size"`     // 文件大小（仅文件类型有效）
+	Object   string     `json:"object"`   // 对象路径，如 "ab/cdef..."（仅文件类型有效）
+	Children []TreeNode `json:"children"` // 子节点（仅目录类型有效）
 }
 
-// Manifest represents the complete metadata for an imported asset.
+// Manifest 表示已导入资产的完整元数据。
 type Manifest struct {
-	Hash         string   `json:"hash"`          // SHA-256 of manifest identity
-	OriginalName string   `json:"original_name"` // user-specified name
-	OriginalPath string   `json:"original_path"` // source path
-	CreatedAt    string   `json:"created_at"`    // ISO 8601 timestamp
-	FileCount    int      `json:"file_count"`    // total number of files
-	TotalSize    int64    `json:"total_size"`    // original total size
-	StoredSize   int64    `json:"stored_size"`   // actual storage size after dedup
-	Status       string   `json:"status"`        // "active" or "trashed"
-	Tree         TreeNode `json:"tree"`          // root directory tree node
+	Hash         string   `json:"hash"`          // 清单身份的 SHA-256 哈希
+	OriginalName string   `json:"original_name"` // 用户指定的资产名称
+	OriginalPath string   `json:"original_path"` // 来源路径
+	CreatedAt    string   `json:"created_at"`    // ISO 8601 时间戳
+	FileCount    int      `json:"file_count"`    // 文件总数
+	TotalSize    int64    `json:"total_size"`    // 原始总大小
+	StoredSize   int64    `json:"stored_size"`   // 去重后实际存储大小
+	Status       string   `json:"status"`        // "active" 或 "trashed"
+	Tree         TreeNode `json:"tree"`          // 根目录树节点
 }
 
-// Ref represents a name-to-manifest-hash mapping.
+// Ref 表示资产名称到清单哈希的映射关系。
 type Ref struct {
 	Name     string `json:"name"`
 	Manifest string `json:"manifest"`

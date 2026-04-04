@@ -1,3 +1,4 @@
+// Package adapter 提供将外部数据源（文件系统目录、ZIP 文件）适配为 TreeNode 树的适配器。
 package adapter
 
 import (
@@ -11,21 +12,21 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// DirAdapter adapts a filesystem directory into a TreeNode tree.
-// It stores all file objects via the ObjectStorage during adaptation.
-// Symlinks are skipped. Inaccessible files are skipped with a warning.
+// DirAdapter 将文件系统目录适配为 TreeNode 树。
+// 适配过程中将所有文件对象存储到 ObjectStorage。
+// 符号链接会被跳过，不可访问的文件会记录警告后跳过。
 type DirAdapter struct {
 	Store         port.ObjectStorage
 	NormalizeCRLF bool
 }
 
-// NewDirAdapter creates a new DirAdapter.
+// NewDirAdapter 创建新的 DirAdapter 实例。
 func NewDirAdapter(store port.ObjectStorage, normalizeCRLF bool) *DirAdapter {
 	return &DirAdapter{Store: store, NormalizeCRLF: normalizeCRLF}
 }
 
-// Adapt reads the directory at dirPath and returns a TreeNode tree.
-// All file contents are stored in the ObjectStorage.
+// Adapt 读取 dirPath 指定的目录并返回 TreeNode 树。
+// 所有文件内容会在适配过程中存储到 ObjectStorage。
 func (a *DirAdapter) Adapt(dirPath string) (*domain.TreeNode, error) {
 	info, err := os.Stat(dirPath)
 	if err != nil {
@@ -37,13 +38,14 @@ func (a *DirAdapter) Adapt(dirPath string) (*domain.TreeNode, error) {
 	return a.buildTree(info.Name(), dirPath)
 }
 
+// buildTree 递归构建目录树。
 func (a *DirAdapter) buildTree(name, path string) (*domain.TreeNode, error) {
 	info, err := os.Lstat(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// Skip symlinks
+	// 跳过符号链接
 	if info.Mode()&os.ModeSymlink != 0 {
 		slog.Warn("skipping symlink", "path", path)
 		return nil, nil
@@ -61,7 +63,7 @@ func (a *DirAdapter) buildTree(name, path string) (*domain.TreeNode, error) {
 		hash := sha256.Sum256(content)
 		hashStr := hex.EncodeToString(hash[:])
 
-		// Store the object
+		// 存储对象
 		if err := a.Store.Write(hashStr, content); err != nil {
 			slog.Warn("failed to store object", "hash", hashStr[:16], "error", err)
 		}
@@ -99,11 +101,12 @@ func (a *DirAdapter) buildTree(name, path string) (*domain.TreeNode, error) {
 	return node, nil
 }
 
-// NormalizeCRLF replaces CRLF with LF.
+// NormalizeCRLF 将 CRLF 换行替换为 LF。
 func NormalizeCRLF(data []byte) []byte {
 	return bytesReplaceAll(data, []byte("\r\n"), []byte("\n"))
 }
 
+// bytesReplaceAll 将 s 中所有 old 替换为 new。
 func bytesReplaceAll(s, old, new []byte) []byte {
 	if len(old) == 0 {
 		return s
@@ -121,6 +124,7 @@ func bytesReplaceAll(s, old, new []byte) []byte {
 	}
 }
 
+// bytesIndexOf 返回 sep 在 s 中首次出现的位置，未找到返回 -1。
 func bytesIndexOf(s, sep []byte) int {
 	for i := 0; i+len(sep) <= len(s); i++ {
 		if bytesEqual(s[i:i+len(sep)], sep) {
@@ -130,6 +134,7 @@ func bytesIndexOf(s, sep []byte) int {
 	return -1
 }
 
+// bytesEqual 比较两个字节切片是否相等。
 func bytesEqual(a, b []byte) bool {
 	if len(a) != len(b) {
 		return false

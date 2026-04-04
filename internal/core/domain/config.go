@@ -1,6 +1,7 @@
+// Package domain 定义 Distill 的核心领域实体、错误类型和配置结构。
 package domain
 
-// Config represents the repository-level configuration.
+// Config 表示仓库级别的配置。
 type Config struct {
 	Core struct {
 		Version       string `toml:"version"`

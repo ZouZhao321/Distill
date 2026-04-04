@@ -54,7 +54,7 @@ func init() {
 }
 
 func printJSON(items []usecase.ListItem) error {
-	// Simple JSON output without external dependency
+	// 不依赖外部库的简单 JSON 输出
 	fmt.Println("[")
 	for i, item := range items {
 		sep := ","

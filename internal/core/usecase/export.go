@@ -11,18 +11,18 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// ExportUseCase exports an asset as a ZIP file.
+// ExportUseCase 负责将资产导出为 ZIP 压缩包。
 type ExportUseCase struct {
 	repo  port.AssetRepository
 	store port.ObjectStorage
 }
 
-// NewExportUseCase creates a new ExportUseCase.
+// NewExportUseCase 创建新的 ExportUseCase 实例。
 func NewExportUseCase(repo port.AssetRepository, store port.ObjectStorage) *ExportUseCase {
 	return &ExportUseCase{repo: repo, store: store}
 }
 
-// Execute exports the named asset to outputPath as a ZIP file.
+// Execute 将指定资产导出为 ZIP 文件并保存到 outputPath。
 func (uc *ExportUseCase) Execute(name, outputPath string) error {
 	ref, err := uc.repo.GetRef(name)
 	if err != nil {
@@ -47,7 +47,7 @@ func (uc *ExportUseCase) Execute(name, outputPath string) error {
 	return addTreeToZip(uc.store, manifest.Tree, "", zw)
 }
 
-// addTreeToZip recursively adds a TreeNode tree to a zip writer.
+// addTreeToZip 递归将 TreeNode 树添加到 zip 写入器中。
 func addTreeToZip(store port.ObjectStorage, node domain.TreeNode, prefix string, zw *zip.Writer) error {
 	path := prefix + node.Name
 

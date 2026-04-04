@@ -1,3 +1,5 @@
+// Package store 提供 AssetRepository 和 ObjectStorage 接口的文件系统实现。
+// 清单存储为 JSON 文件，对象以 SHA-256 哈希分片存储。
 package store
 
 import (
@@ -12,16 +14,16 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/domain"
 )
 
-// ManifestStore implements port.AssetRepository using the filesystem.
-// Manifests are stored as individual JSON files in manifestsDir.
-// Refs are stored as a single JSON map in refsPath.
+// ManifestStore 使用文件系统实现 port.AssetRepository 接口。
+// 清单以独立 JSON 文件存储在 manifestsDir 中。
+// 引用以单个 JSON 映射存储在 refsPath 中。
 type ManifestStore struct {
 	manifestsDir string
 	refsPath     string
 	mu           sync.Mutex
 }
 
-// NewManifestStore creates a new ManifestStore.
+// NewManifestStore 创建新的 ManifestStore 实例。
 func NewManifestStore(manifestsDir, refsPath string) *ManifestStore {
 	os.MkdirAll(manifestsDir, 0755)
 	return &ManifestStore{
@@ -30,19 +32,20 @@ func NewManifestStore(manifestsDir, refsPath string) *ManifestStore {
 	}
 }
 
-// ManifestsDir returns the manifests directory path.
+// ManifestsDir 返回清单目录路径。
 func (s *ManifestStore) ManifestsDir() string { return s.manifestsDir }
 
-// RefsPath returns the refs JSON file path.
+// RefsPath 返回引用 JSON 文件路径。
 func (s *ManifestStore) RefsPath() string { return s.refsPath }
 
+// manifestPath 根据哈希计算清单文件路径。
 func (s *ManifestStore) manifestPath(hash string) string {
 	return filepath.Join(s.manifestsDir, hash+"manifest.json")
 }
 
-// --- Manifest operations ---
+// --- 清单操作 ---
 
-// SaveManifest writes the manifest as a JSON file.
+// SaveManifest 将清单写入 JSON 文件。
 func (s *ManifestStore) SaveManifest(m *domain.Manifest) error {
 	data, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
@@ -51,7 +54,7 @@ func (s *ManifestStore) SaveManifest(m *domain.Manifest) error {
 	return os.WriteFile(s.manifestPath(m.Hash), data, 0644)
 }
 
-// GetManifest reads and parses a manifest by hash.
+// GetManifest 根据哈希读取并解析清单。
 func (s *ManifestStore) GetManifest(hash string) (*domain.Manifest, error) {
 	data, err := os.ReadFile(s.manifestPath(hash))
 	if err != nil {
@@ -67,7 +70,7 @@ func (s *ManifestStore) GetManifest(hash string) (*domain.Manifest, error) {
 	return &m, nil
 }
 
-// ListManifests returns all manifests in the store.
+// ListManifests 返回仓库中的所有清单。
 func (s *ManifestStore) ListManifests() ([]domain.Manifest, error) {
 	entries, err := os.ReadDir(s.manifestsDir)
 	if err != nil {
@@ -91,13 +94,14 @@ func (s *ManifestStore) ListManifests() ([]domain.Manifest, error) {
 	return manifests, nil
 }
 
-// RemoveManifest deletes the manifest file.
+// RemoveManifest 删除清单文件。
 func (s *ManifestStore) RemoveManifest(hash string) error {
 	return os.Remove(s.manifestPath(hash))
 }
 
-// --- Ref operations ---
+// --- 引用操作 ---
 
+// loadRefs 从文件加载引用映射。
 func (s *ManifestStore) loadRefs() (map[string]string, error) {
 	refs := make(map[string]string)
 	data, err := os.ReadFile(s.refsPath)
@@ -111,6 +115,7 @@ func (s *ManifestStore) loadRefs() (map[string]string, error) {
 	return refs, nil
 }
 
+// saveRefs 将引用映射写入文件。
 func (s *ManifestStore) saveRefs(refs map[string]string) error {
 	data, err := json.MarshalIndent(refs, "", "  ")
 	if err != nil {
@@ -119,7 +124,7 @@ func (s *ManifestStore) saveRefs(refs map[string]string) error {
 	return os.WriteFile(s.refsPath, data, 0644)
 }
 
-// CreateRef registers a new name-to-manifest mapping.
+// CreateRef 注册新的资产名称到清单哈希的映射。
 func (s *ManifestStore) CreateRef(ref domain.Ref) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -135,7 +140,7 @@ func (s *ManifestStore) CreateRef(ref domain.Ref) error {
 	return s.saveRefs(refs)
 }
 
-// GetRef looks up a ref by name.
+// GetRef 根据名称查找引用。
 func (s *ManifestStore) GetRef(name string) (domain.Ref, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -151,7 +156,7 @@ func (s *ManifestStore) GetRef(name string) (domain.Ref, error) {
 	return domain.Ref{Name: name, Manifest: hash}, nil
 }
 
-// ListRefs returns all registered refs.
+// ListRefs 返回所有已注册的引用。
 func (s *ManifestStore) ListRefs() ([]domain.Ref, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -170,7 +175,7 @@ func (s *ManifestStore) ListRefs() ([]domain.Ref, error) {
 	return result, nil
 }
 
-// DeleteRef removes a ref by name.
+// DeleteRef 根据名称删除引用。
 func (s *ManifestStore) DeleteRef(name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -186,7 +191,7 @@ func (s *ManifestStore) DeleteRef(name string) error {
 	return s.saveRefs(refs)
 }
 
-// GetRefNameByHash finds a ref name by its manifest hash.
+// GetRefNameByHash 根据清单哈希反查引用名称。
 func (s *ManifestStore) GetRefNameByHash(hash string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

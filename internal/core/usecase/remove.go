@@ -6,32 +6,31 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// RemoveUseCase removes an asset from the repository.
-// It deletes the manifest and ref, but does NOT delete the underlying objects.
-// Objects will be cleaned up by GC.
+// RemoveUseCase 负责从仓库移除资产。
+// 它删除清单和引用，但不删除底层对象，对象由 GC 统一清理。
 type RemoveUseCase struct {
 	repo port.AssetRepository
 }
 
-// NewRemoveUseCase creates a new RemoveUseCase.
+// NewRemoveUseCase 创建新的 RemoveUseCase 实例。
 func NewRemoveUseCase(repo port.AssetRepository) *RemoveUseCase {
 	return &RemoveUseCase{repo: repo}
 }
 
-// Execute removes the named asset by deleting its manifest and ref.
-// Objects remain in storage until GC is run.
+// Execute 通过删除清单和引用来移除指定资产。
+// 对象保留在存储中，等待 GC 清理。
 func (uc *RemoveUseCase) Execute(name string) error {
 	ref, err := uc.repo.GetRef(name)
 	if err != nil {
 		return err
 	}
 
-	// Delete manifest
+	// 删除清单
 	if err := uc.repo.RemoveManifest(ref.Manifest); err != nil {
 		return err
 	}
 
-	// Delete ref
+	// 删除引用
 	err = uc.repo.DeleteRef(name)
 	if err == nil {
 		slog.Info("asset removed", "name", name, "manifest_hash", ref.Manifest)

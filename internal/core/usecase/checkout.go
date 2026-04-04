@@ -9,19 +9,19 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// CheckoutUseCase restores assets from the repository to a target directory.
+// CheckoutUseCase 负责从仓库还原资产到目标目录。
 type CheckoutUseCase struct {
 	repo  port.AssetRepository
 	store port.ObjectStorage
 }
 
-// NewCheckoutUseCase creates a new CheckoutUseCase.
+// NewCheckoutUseCase 创建新的 CheckoutUseCase 实例。
 func NewCheckoutUseCase(repo port.AssetRepository, store port.ObjectStorage) *CheckoutUseCase {
 	return &CheckoutUseCase{repo: repo, store: store}
 }
 
-// Execute restores the named asset to outputDir.
-// overwrite controls behavior when files already exist: "skip", "force", or "ask".
+// Execute 将指定资产还原到 outputDir。
+// overwrite 控制文件已存在时的行为："skip"、"force" 或 "ask"。
 func (uc *CheckoutUseCase) Execute(name, outputDir, overwrite string) error {
 	ref, err := uc.repo.GetRef(name)
 	if err != nil {
@@ -37,7 +37,7 @@ func (uc *CheckoutUseCase) Execute(name, outputDir, overwrite string) error {
 	return restoreTree(uc.store, manifest.Tree, outputDir, overwrite)
 }
 
-// restoreTree recursively restores a TreeNode tree to the filesystem.
+// restoreTree 递归将 TreeNode 树还原到文件系统。
 func restoreTree(store port.ObjectStorage, node domain.TreeNode, targetDir, overwrite string) error {
 	targetPath := filepath.Join(targetDir, node.Name)
 
@@ -48,7 +48,7 @@ func restoreTree(store port.ObjectStorage, node domain.TreeNode, targetDir, over
 			case "skip":
 				return nil
 			case "force":
-				// proceed to overwrite
+				// 继续覆盖
 			case "ask":
 				return domain.ErrAlreadyExists
 			}

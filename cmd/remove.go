@@ -53,7 +53,7 @@ var removeCmd = &cobra.Command{
 	},
 }
 
-// backupToTrash copies the manifest JSON to the trash directory.
+// backupToTrash 将清单 JSON 复制到回收站目录。
 func backupToTrash(manifest *domain.Manifest, trashPath string) error {
 	if err := os.MkdirAll(trashPath, 0755); err != nil {
 		return err

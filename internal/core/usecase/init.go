@@ -6,21 +6,22 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/domain"
 )
 
+// ErrAlreadyInitialized 表示仓库已经初始化过。
 var ErrAlreadyInitialized = errors.New("repository already initialized")
 
-// InitUseCase handles repository initialization.
-// It produces a default Config without requiring external dependencies.
+// InitUseCase 负责仓库初始化。
+// 它生成默认配置，不依赖外部资源。
 type InitUseCase struct {
 	initialized bool
 }
 
-// NewInitUseCase creates a new InitUseCase.
+// NewInitUseCase 创建新的 InitUseCase 实例。
 func NewInitUseCase() *InitUseCase {
 	return &InitUseCase{}
 }
 
-// Execute creates a default Config with the given home and trash paths.
-// Returns ErrAlreadyInitialized if called more than once.
+// Execute 使用给定的仓库路径和回收站路径创建默认配置。
+// 如果已初始化过，返回 ErrAlreadyInitialized。
 func (uc *InitUseCase) Execute(homePath, trashPath string) (*domain.Config, error) {
 	if uc.initialized {
 		return nil, ErrAlreadyInitialized

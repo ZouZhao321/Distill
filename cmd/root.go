@@ -1,3 +1,5 @@
+// Package cmd 实现 Distill CLI 的所有命令。
+// 包含 init、add、list、checkout、export、remove、gc 七个子命令。
 package cmd
 
 import (
@@ -24,7 +26,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-// Execute runs the root command.
+// Execute 启动根命令并执行。
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -40,7 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "日志级别 (debug|info|warn|error)")
 }
 
-// setupLogger initializes the global slog logger based on CLI flags.
+// setupLogger 根据 CLI 参数初始化全局 slog 日志。
 func setupLogger() {
 	level := parseLogLevel(logLevel)
 
@@ -54,7 +56,7 @@ func setupLogger() {
 	slog.SetDefault(slog.New(handler))
 }
 
-// parseLogLevel converts a string log level to slog.Level.
+// parseLogLevel 将字符串日志级别转换为 slog.Level。
 func parseLogLevel(level string) slog.Level {
 	switch level {
 	case "debug":

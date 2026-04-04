@@ -1,3 +1,5 @@
+// Package usecase 实现资产管理的核心业务用例。
+// 包括添加、查询、检出、导出、移除和垃圾回收。
 package usecase
 
 import (
@@ -10,43 +12,43 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// AddAssetInput holds the input for adding an asset.
+// AddAssetInput 保存添加资产所需的输入参数。
 type AddAssetInput struct {
 	Name    string
-	Content []byte           // single-file mode
-	Tree    *domain.TreeNode // directory/ZIP mode
+	Content []byte           // 单文件模式
+	Tree    *domain.TreeNode // 目录/ZIP 模式
 	Source  string
 }
 
-// AddAssetUseCase handles importing a single file into the repository.
+// AddAssetUseCase 负责将资产导入仓库。
 type AddAssetUseCase struct {
 	repo  port.AssetRepository
 	store port.ObjectStorage
 }
 
-// NewAddAssetUseCase creates a new AddAssetUseCase.
+// NewAddAssetUseCase 创建新的 AddAssetUseCase 实例。
 func NewAddAssetUseCase(repo port.AssetRepository, store port.ObjectStorage) *AddAssetUseCase {
 	return &AddAssetUseCase{repo: repo, store: store}
 }
 
-// Execute imports a single file: compute hash, store object, create manifest, register ref.
+// Execute 导入单个文件：计算哈希、存储对象、创建清单、注册引用。
 func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error) {
 	if len(input.Content) == 0 {
 		return nil, domain.ErrEmptySource
 	}
 
-	// Check name uniqueness
+	// 检查名称是否已存在
 	if _, err := uc.repo.GetRef(input.Name); err == nil {
 		return nil, domain.ErrAlreadyExists
 	}
 
-	// Compute hash and store object
+	// 计算哈希并存储对象
 	hash := computeHash(input.Content)
 	if err := uc.store.Write(hash, input.Content); err != nil {
 		return nil, err
 	}
 
-	// Build manifest
+	// 构建清单
 	now := time.Now().UTC().Format(time.RFC3339)
 	manifest := &domain.Manifest{
 		OriginalName: input.Name,
@@ -64,10 +66,10 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 		},
 	}
 
-	// Compute manifest identity hash
+	// 计算清单身份哈希
 	manifest.Hash = computeHash([]byte(manifest.OriginalName + manifest.CreatedAt))
 
-	// Save manifest and register ref
+	// 保存清单并注册引用
 	if err := uc.repo.SaveManifest(manifest); err != nil {
 		return nil, err
 	}
@@ -79,8 +81,8 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 	return manifest, nil
 }
 
-// ExecuteForDirectory imports a directory tree: create manifest and register ref.
-// Objects should already be stored by the caller (e.g., DirAdapter/ZipAdapter).
+// ExecuteForDirectory 导入目录树：创建清单并注册引用。
+// 调用方（如 DirAdapter/ZipAdapter）应已将对象存储完毕。
 func (uc *AddAssetUseCase) ExecuteForDirectory(input AddAssetInput) (*domain.Manifest, error) {
 	if input.Tree == nil {
 		return nil, domain.ErrEmptySource
@@ -117,7 +119,7 @@ func (uc *AddAssetUseCase) ExecuteForDirectory(input AddAssetInput) (*domain.Man
 	return manifest, nil
 }
 
-// countTree counts files and total size in a TreeNode tree.
+// countTree 递归统计 TreeNode 树中的文件数量和总大小。
 func countTree(node *domain.TreeNode) (int, int64) {
 	if node.Type == "file" {
 		return 1, node.Size
@@ -132,7 +134,7 @@ func countTree(node *domain.TreeNode) (int, int64) {
 	return count, size
 }
 
-// computeHash returns the SHA-256 hex digest of data.
+// computeHash 返回数据的 SHA-256 十六进制摘要。
 func computeHash(data []byte) string {
 	h := sha256.Sum256(data)
 	return hex.EncodeToString(h[:])

@@ -44,7 +44,7 @@ var checkoutCmd = &cobra.Command{
 		err := uc.Execute(name, outputDir, overwrite)
 		if err != nil {
 			if err == domain.ErrAlreadyExists && overwrite == "ask" {
-				// Ask user for confirmation
+				// 交互式确认是否覆盖
 				fmt.Printf("文件已存在: %s\n", outputDir)
 				fmt.Print("是否覆盖？(y/N): ")
 				reader := bufio.NewReader(os.Stdin)

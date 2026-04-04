@@ -7,24 +7,24 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// GCUseCase performs garbage collection on the object store.
-// It identifies and optionally removes objects not referenced by any manifest.
+// GCUseCase 负责对象存储的垃圾回收。
+// 它识别并清理未被任何清单引用的孤立对象。
 type GCUseCase struct {
 	repo  port.AssetRepository
 	store port.ObjectStorage
 }
 
-// NewGCUseCase creates a new GCUseCase.
+// NewGCUseCase 创建新的 GCUseCase 实例。
 func NewGCUseCase(repo port.AssetRepository, store port.ObjectStorage) *GCUseCase {
 	return &GCUseCase{repo: repo, store: store}
 }
 
-// ExecuteDryRun returns a list of orphan object hashes without deleting them.
+// ExecuteDryRun 返回孤立对象哈希列表，但不执行删除。
 func (uc *GCUseCase) ExecuteDryRun() ([]string, error) {
 	return uc.findOrphans()
 }
 
-// Execute removes all orphan objects and returns the count of cleaned objects.
+// Execute 删除所有孤立对象，并返回清理数量。
 func (uc *GCUseCase) Execute() (int, error) {
 	orphans, err := uc.findOrphans()
 	if err != nil {
@@ -39,9 +39,9 @@ func (uc *GCUseCase) Execute() (int, error) {
 	return len(orphans), nil
 }
 
-// findOrphans collects all objects not referenced by any manifest.
+// findOrphans 收集所有未被任何清单引用的孤立对象。
 func (uc *GCUseCase) findOrphans() ([]string, error) {
-	// Collect all object hashes referenced by manifests
+	// 收集所有清单引用的对象哈希
 	referenced := make(map[string]bool)
 	manifests, err := uc.repo.ListManifests()
 	if err != nil {
@@ -51,7 +51,7 @@ func (uc *GCUseCase) findOrphans() ([]string, error) {
 		collectObjects(m.Tree, referenced)
 	}
 
-	// Walk all stored objects and find orphans
+	// 遍历所有已存储对象，找出孤立对象
 	var orphans []string
 	err = uc.store.Walk(func(hash string) error {
 		if !referenced[hash] {
@@ -66,7 +66,7 @@ func (uc *GCUseCase) findOrphans() ([]string, error) {
 	return orphans, nil
 }
 
-// collectObjects recursively collects all object hashes from a TreeNode tree.
+// collectObjects 递归收集 TreeNode 树中所有对象的哈希。
 func collectObjects(node domain.TreeNode, set map[string]bool) {
 	if node.Type == "file" && node.Object != "" {
 		set[node.Object] = true

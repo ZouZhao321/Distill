@@ -12,21 +12,21 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// ZipAdapter adapts a ZIP file into a TreeNode tree.
-// It stores all file objects via the ObjectStorage during adaptation.
+// ZipAdapter 将 ZIP 文件适配为 TreeNode 树。
+// 适配过程中将所有文件对象存储到 ObjectStorage。
 type ZipAdapter struct {
 	Store         port.ObjectStorage
 	NormalizeCRLF bool
 }
 
-// NewZipAdapter creates a new ZipAdapter.
+// NewZipAdapter 创建新的 ZipAdapter 实例。
 func NewZipAdapter(store port.ObjectStorage, normalizeCRLF bool) *ZipAdapter {
 	return &ZipAdapter{Store: store, NormalizeCRLF: normalizeCRLF}
 }
 
-// Adapt reads the ZIP file at zipPath and returns a TreeNode tree.
-// All file contents are stored in the ObjectStorage.
-// Encrypted or corrupted entries are skipped.
+// Adapt 读取 zipPath 指定的 ZIP 文件并返回 TreeNode 树。
+// 所有文件内容会在适配过程中存储到 ObjectStorage。
+// 加密或损坏的条目会被跳过。
 func (a *ZipAdapter) Adapt(zipPath string) (*domain.TreeNode, error) {
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
@@ -46,7 +46,7 @@ func (a *ZipAdapter) Adapt(zipPath string) (*domain.TreeNode, error) {
 
 		rc, err := f.Open()
 		if err != nil {
-			continue // skip encrypted or corrupted
+			continue // 跳过加密或损坏的条目
 		}
 		data, err := io.ReadAll(rc)
 		rc.Close()
@@ -61,7 +61,7 @@ func (a *ZipAdapter) Adapt(zipPath string) (*domain.TreeNode, error) {
 		hash := sha256.Sum256(data)
 		hashStr := hex.EncodeToString(hash[:])
 
-		// Store the object
+		// 存储对象
 		a.Store.Write(hashStr, data)
 
 		parts := strings.Split(filepath.ToSlash(f.Name), "/")
@@ -83,6 +83,7 @@ func (a *ZipAdapter) Adapt(zipPath string) (*domain.TreeNode, error) {
 	return root, nil
 }
 
+// findOrCreateDir 在父节点中查找或创建指定名称的目录节点。
 func (a *ZipAdapter) findOrCreateDir(parent *domain.TreeNode, name string) *domain.TreeNode {
 	for i := range parent.Children {
 		if parent.Children[i].Name == name && parent.Children[i].Type == "directory" {
