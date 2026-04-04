@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
@@ -42,6 +43,7 @@ func (uc *ExportUseCase) Execute(name, outputPath string) error {
 	zw := zip.NewWriter(f)
 	defer zw.Close()
 
+	slog.Info("export started", "name", name, "output", outputPath)
 	return addTreeToZip(uc.store, manifest.Tree, "", zw)
 }
 

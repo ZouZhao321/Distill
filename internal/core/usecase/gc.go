@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"log/slog"
+
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
@@ -33,6 +35,7 @@ func (uc *GCUseCase) Execute() (int, error) {
 		uc.store.Delete(hash)
 	}
 
+	slog.Info("gc completed", "cleaned", len(orphans))
 	return len(orphans), nil
 }
 

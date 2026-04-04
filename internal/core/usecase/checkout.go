@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -32,6 +33,7 @@ func (uc *CheckoutUseCase) Execute(name, outputDir, overwrite string) error {
 		return err
 	}
 
+	slog.Info("checkout started", "name", name, "output", outputDir, "overwrite", overwrite)
 	return restoreTree(uc.store, manifest.Tree, outputDir, overwrite)
 }
 

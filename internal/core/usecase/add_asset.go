@@ -3,6 +3,7 @@ package usecase
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"log/slog"
 	"time"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
@@ -74,6 +75,7 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 		return nil, err
 	}
 
+	slog.Info("asset added", "name", input.Name, "hash", manifest.Hash, "files", manifest.FileCount, "size", manifest.TotalSize)
 	return manifest, nil
 }
 
@@ -111,6 +113,7 @@ func (uc *AddAssetUseCase) ExecuteForDirectory(input AddAssetInput) (*domain.Man
 		return nil, err
 	}
 
+	slog.Info("directory asset added", "name", input.Name, "hash", manifest.Hash, "files", manifest.FileCount, "size", manifest.TotalSize)
 	return manifest, nil
 }
 

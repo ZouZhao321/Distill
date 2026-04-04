@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"log/slog"
+
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
@@ -30,5 +32,9 @@ func (uc *RemoveUseCase) Execute(name string) error {
 	}
 
 	// Delete ref
-	return uc.repo.DeleteRef(name)
+	err = uc.repo.DeleteRef(name)
+	if err == nil {
+		slog.Info("asset removed", "name", name, "manifest_hash", ref.Manifest)
+	}
+	return err
 }
