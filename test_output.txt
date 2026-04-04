@@ -1,7 +1,23 @@
-?   	github.com/ZouZhao321/distill	[no test files]
-?   	github.com/ZouZhao321/distill/cmd	[no test files]
-ok  	github.com/ZouZhao321/distill/internal/adapter	0.499s
-?   	github.com/ZouZhao321/distill/internal/core/domain	[no test files]
-?   	github.com/ZouZhao321/distill/internal/core/port	[no test files]
-ok  	github.com/ZouZhao321/distill/internal/core/usecase	(cached)
-ok  	github.com/ZouZhao321/distill/internal/infra/store	(cached)
+Distill ??? Go ?? CLI ?????????????????????????????????
+
+Usage:
+  distill [command]
+
+Available Commands:
+  add         ???????
+  checkout    ??????????
+  completion  Generate the autocompletion script for the specified shell
+  export      ????? ZIP ???
+  gc          ????
+  help        Help about any command
+  init        ??? Distill ??
+  list        ??????
+  remove      ????
+
+Flags:
+  -h, --help                help for distill
+      --home string         ???? (default "C:\\Users\\ZouZhao\\.distill")
+      --log-format string   ???? (text|json) (default "text")
+      --log-level string    ???? (debug|info|warn|error) (default "info")
+
+Use "distill [command] --help" for more information about a command.
