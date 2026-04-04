@@ -58,7 +58,7 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 			Name:   input.Name,
 			Type:   "file",
 			Size:   int64(len(input.Content)),
-			Object: hash[:2] + "/" + hash[2:],
+			Object: hash,
 		},
 	}
 

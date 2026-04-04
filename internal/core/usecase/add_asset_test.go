@@ -52,12 +52,8 @@ func TestAddAsset_Execute_SingleFile(t *testing.T) {
 	if manifest.Tree.Object == "" {
 		t.Error("Tree.Object should not be empty")
 	}
-	// Object format should be xx/yyyy... (2 char prefix + slash + remaining)
-	if len(manifest.Tree.Object) < 3 {
-		t.Errorf("Tree.Object too short: %q", manifest.Tree.Object)
-	}
-	if manifest.Tree.Object[2] != '/' {
-		t.Errorf("Tree.Object should have '/' at index 2, got %q", manifest.Tree.Object)
+	if len(manifest.Tree.Object) != 64 {
+		t.Errorf("Tree.Object should be 64-char SHA-256 hex, got %d chars", len(manifest.Tree.Object))
 	}
 }
 
