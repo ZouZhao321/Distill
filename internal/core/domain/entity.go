@@ -8,11 +8,11 @@ type Object struct {
 
 // TreeNode represents a node in the manifest directory tree.
 type TreeNode struct {
-	Name     string     // file or directory name
-	Type     string     // "file" or "directory"
-	Size     int64      // file size (only for file type)
-	Object   string     // object path, e.g. "ab/cdef..." (only for file type)
-	Children []TreeNode // child nodes (only for directory type)
+	Name     string     `json:"name"`     // file or directory name
+	Type     string     `json:"type"`     // "file" or "directory"
+	Size     int64      `json:"size"`     // file size (only for file type)
+	Object   string     `json:"object"`   // object path, e.g. "ab/cdef..." (only for file type)
+	Children []TreeNode `json:"children"` // child nodes (only for directory type)
 }
 
 // Manifest represents the complete metadata for an imported asset.
