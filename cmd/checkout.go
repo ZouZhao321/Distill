@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
 	"github.com/ZouZhao321/distill/internal/infra/store"
 )
@@ -39,7 +43,26 @@ var checkoutCmd = &cobra.Command{
 		uc := usecase.NewCheckoutUseCase(manifestStore, objectStore)
 		err := uc.Execute(name, outputDir, overwrite)
 		if err != nil {
-			return fmt.Errorf("还原失败: %w", err)
+			if err == domain.ErrAlreadyExists && overwrite == "ask" {
+				// Ask user for confirmation
+				fmt.Printf("文件已存在: %s\n", outputDir)
+				fmt.Print("是否覆盖？(y/N): ")
+				reader := bufio.NewReader(os.Stdin)
+				answer, _ := reader.ReadString('\n')
+				answer = strings.TrimSpace(strings.ToLower(answer))
+
+				if answer == "y" || answer == "yes" {
+					err = uc.Execute(name, outputDir, "force")
+					if err != nil {
+						return fmt.Errorf("还原失败: %w", err)
+					}
+				} else {
+					fmt.Println("已跳过。")
+					return nil
+				}
+			} else {
+				return fmt.Errorf("还原失败: %w", err)
+			}
 		}
 
 		fmt.Printf("已还原: %s -> %s\n", name, outputDir)

@@ -8,7 +8,7 @@ import (
 
 // --- DirAdapter tests ---
 
-func TestDirAdapter_Adapt_SingleFile(t *testing.T) {
+func TestDirAdapter_Adapt_EmptyDir(t *testing.T) {
 	dir := t.TempDir()
 	store := newMockTestStore()
 	ada := NewDirAdapter(store, false)
@@ -28,7 +28,6 @@ func TestDirAdapter_Adapt_SingleFile(t *testing.T) {
 func TestDirAdapter_Adapt_WithFiles(t *testing.T) {
 	dir := t.TempDir()
 
-	// Create test files
 	os.WriteFile(filepath.Join(dir, "a.txt"), []byte("hello"), 0644)
 	os.WriteFile(filepath.Join(dir, "b.txt"), []byte("world"), 0644)
 
@@ -44,7 +43,6 @@ func TestDirAdapter_Adapt_WithFiles(t *testing.T) {
 		t.Errorf("expected 2 children, got %d", len(tree.Children))
 	}
 
-	// Verify objects were stored
 	if len(store.data) != 2 {
 		t.Errorf("expected 2 objects stored, got %d", len(store.data))
 	}
@@ -53,7 +51,6 @@ func TestDirAdapter_Adapt_WithFiles(t *testing.T) {
 func TestDirAdapter_Adapt_NestedDir(t *testing.T) {
 	dir := t.TempDir()
 
-	// Create nested structure
 	subDir := filepath.Join(dir, "sub")
 	os.MkdirAll(subDir, 0755)
 	os.WriteFile(filepath.Join(subDir, "nested.txt"), []byte("nested content"), 0644)
@@ -66,7 +63,6 @@ func TestDirAdapter_Adapt_NestedDir(t *testing.T) {
 		t.Fatalf("Adapt failed: %v", err)
 	}
 
-	// Find the sub directory
 	foundSub := false
 	for _, child := range tree.Children {
 		if child.Name == "sub" && child.Type == "directory" {
@@ -78,6 +74,65 @@ func TestDirAdapter_Adapt_NestedDir(t *testing.T) {
 	}
 	if !foundSub {
 		t.Error("sub directory not found in tree")
+	}
+}
+
+func TestDirAdapter_Adapt_SkipsSymlinks(t *testing.T) {
+	dir := t.TempDir()
+
+	os.WriteFile(filepath.Join(dir, "regular.txt"), []byte("hello"), 0644)
+
+	// Create a symlink (may fail on Windows without privileges)
+	linkPath := filepath.Join(dir, "link.txt")
+	_ = os.Symlink(filepath.Join(dir, "regular.txt"), linkPath)
+
+	store := newMockTestStore()
+	ada := NewDirAdapter(store, false)
+
+	tree, err := ada.Adapt(dir)
+	if err != nil {
+		t.Fatalf("Adapt failed: %v", err)
+	}
+
+	foundRegular := false
+	for _, child := range tree.Children {
+		if child.Name == "regular.txt" {
+			foundRegular = true
+		}
+	}
+	if !foundRegular {
+		t.Error("regular.txt should be in the tree")
+	}
+
+	// Symlinks should not appear as regular files
+	for _, child := range tree.Children {
+		if child.Name == "link.txt" && child.Type == "file" {
+			t.Error("symlink should be skipped, not listed as file")
+		}
+	}
+}
+
+func TestDirAdapter_Adapt_NonexistentDir(t *testing.T) {
+	store := newMockTestStore()
+	ada := NewDirAdapter(store, false)
+
+	_, err := ada.Adapt("/nonexistent/path/that/does/not/exist")
+	if err == nil {
+		t.Error("should return error for nonexistent directory")
+	}
+}
+
+func TestDirAdapter_Adapt_FileAsDir(t *testing.T) {
+	dir := t.TempDir()
+	filePath := filepath.Join(dir, "notadir.txt")
+	os.WriteFile(filePath, []byte("content"), 0644)
+
+	store := newMockTestStore()
+	ada := NewDirAdapter(store, false)
+
+	_, err := ada.Adapt(filePath)
+	if err == nil {
+		t.Error("should return error when given a file instead of directory")
 	}
 }
 
