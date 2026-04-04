@@ -1,0 +1,56 @@
+#!/bin/sh
+# commit-msg hook - 校验 commit message 是否符合 Conventional Commits 规范
+# 触发时机：message 写入后、提交完成前
+# $1 = 包含 commit message 的临时文件路径
+
+msg_file="$1"
+first_line=$(head -1 "$msg_file")
+
+# 跳过 merge/fixup/squash commit（由 git 自动生成）
+is_merge=0
+is_fixup=0
+is_squash=0
+
+echo "$first_line" | grep -qE "^Merge " && is_merge=1
+echo "$first_line" | grep -qE "^fixup " && is_fixup=1
+echo "$first_line" | grep -qE "^squash " && is_squash=1
+
+if [ "$is_merge" = "1" ] || [ "$is_fixup" = "1" ] || [ "$is_squash" = "1" ]; then
+  exit 0
+fi
+
+# 校验格式：type(scope): subject 或 type: subject
+# subject 至少 1 个字符，不超过 100 个字符
+echo "$first_line" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,100}$"
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "错误: commit message 不符合 Conventional Commits 规范"
+  echo ""
+  echo "正确格式: <type>(<scope>): <subject>"
+  echo ""
+  echo "允许的 type:"
+  echo "  feat     新功能"
+  echo "  fix      修复 bug"
+  echo "  docs     文档变更"
+  echo "  style    代码格式（不影响逻辑）"
+  echo "  refactor 重构（既非新功能也非修 bug）"
+  echo "  perf     性能优化"
+  echo "  test     测试"
+  echo "  build    构建系统或外部依赖"
+  echo "  ci       CI/CD 配置"
+  echo "  chore    杂项"
+  echo "  revert   回退之前的 commit"
+  echo ""
+  echo "示例:"
+  echo "  feat(core): 实现 AddAssetUseCase"
+  echo "  fix(cli): 修复 checkout 覆盖策略"
+  echo "  chore: 更新 .gitignore"
+  echo ""
+  echo "你的 message: $first_line"
+  echo ""
+  exit 1
+fi
+
+echo "[commit-msg] 格式检查通过"
+exit 0
