@@ -9,10 +9,11 @@ import (
 	"github.com/ZouZhao321/distill/internal/core/port"
 )
 
-// AddAssetInput holds the input for adding a single-file asset.
+// AddAssetInput holds the input for adding an asset.
 type AddAssetInput struct {
 	Name    string
-	Content []byte
+	Content []byte          // single-file mode
+	Tree    *domain.TreeNode // directory/ZIP mode
 	Source  string
 }
 
@@ -74,6 +75,58 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 	}
 
 	return manifest, nil
+}
+
+// ExecuteForDirectory imports a directory tree: create manifest and register ref.
+// Objects should already be stored by the caller (e.g., DirAdapter/ZipAdapter).
+func (uc *AddAssetUseCase) ExecuteForDirectory(input AddAssetInput) (*domain.Manifest, error) {
+	if input.Tree == nil {
+		return nil, domain.ErrEmptySource
+	}
+
+	if _, err := uc.repo.GetRef(input.Name); err == nil {
+		return nil, domain.ErrAlreadyExists
+	}
+
+	fileCount, totalSize := countTree(input.Tree)
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	manifest := &domain.Manifest{
+		OriginalName: input.Name,
+		OriginalPath: input.Source,
+		CreatedAt:    now,
+		FileCount:    fileCount,
+		TotalSize:    totalSize,
+		StoredSize:   totalSize,
+		Status:       "active",
+		Tree:         *input.Tree,
+	}
+
+	manifest.Hash = computeHash([]byte(input.Name + now))
+
+	if err := uc.repo.SaveManifest(manifest); err != nil {
+		return nil, err
+	}
+	if err := uc.repo.CreateRef(domain.Ref{Name: input.Name, Manifest: manifest.Hash}); err != nil {
+		return nil, err
+	}
+
+	return manifest, nil
+}
+
+// countTree counts files and total size in a TreeNode tree.
+func countTree(node *domain.TreeNode) (int, int64) {
+	if node.Type == "file" {
+		return 1, node.Size
+	}
+	count := 0
+	var size int64
+	for i := range node.Children {
+		c, s := countTree(&node.Children[i])
+		count += c
+		size += s
+	}
+	return count, size
 }
 
 // computeHash returns the SHA-256 hex digest of data.

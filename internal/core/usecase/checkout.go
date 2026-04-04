@@ -57,7 +57,6 @@ func restoreTree(store port.ObjectStorage, node domain.TreeNode, targetDir, over
 			return err
 		}
 		return os.WriteFile(targetPath, data, 0644)
-		return os.WriteFile(targetPath, data, 0644)
 
 	case "directory":
 		if err := os.MkdirAll(targetPath, 0755); err != nil {
