@@ -104,6 +104,10 @@ const (
 	// cobra 内置 flag
 	MsgFlagHelp
 
+	// cobra 帮助模板
+	MsgHelpTip
+	MsgFlagDefault
+
 	// 交互提示
 	MsgCheckoutFileExists
 	MsgCheckoutOverwritePrompt
@@ -205,6 +209,10 @@ var zh = map[MsgKey]string{
 	// cobra 内置 flag
 	MsgFlagHelp: "显示帮助信息",
 
+	// cobra 帮助模板
+	MsgHelpTip:     `使用 "distill [命令] --help" 获取更多关于某条命令的信息。`,
+	MsgFlagDefault: "默认",
+
 	// 交互提示
 	MsgCheckoutFileExists:      "文件已存在: %s",
 	MsgCheckoutOverwritePrompt: "是否覆盖？(y/N): ",
@@ -296,6 +304,10 @@ var en = map[MsgKey]string{
 
 	// cobra 内置 flag
 	MsgFlagHelp: "Show help information",
+
+	// cobra 帮助模板
+	MsgHelpTip:     `Use "distill [command] --help" for more information about a command.`,
+	MsgFlagDefault: "default",
 
 	// 交互提示
 	MsgCheckoutFileExists:      "File already exists: %s",

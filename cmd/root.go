@@ -3,11 +3,14 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
+	"text/template"
 	"time"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
@@ -70,6 +73,11 @@ func preParseLang() {
 func applyLangToCommands(root *cobra.Command) {
 	root.Short = domain.T(domain.MsgRootShort)
 	root.Long = domain.T(domain.MsgRootLong)
+
+	// 覆写帮助模板：替换底部提示语为本地化文本
+	helpTip := domain.T(domain.MsgHelpTip)
+	root.SetUsageTemplate(strings.ReplaceAll(root.UsageTemplate(),
+		`Use "{{.CommandPath}} [command] --help" for more information about a command.`, helpTip))
 
 	// 更新自定义子命令
 	shortMap := map[*cobra.Command]domain.MsgKey{
@@ -153,6 +161,69 @@ func registerHelpFlag(cmd *cobra.Command) {
 	cmd.Flags().BoolP("help", "h", false, domain.T(domain.MsgFlagHelp))
 }
 
+// rpad 补齐字符串到指定宽度（与 cobra 内部一致）。
+func rpad(s string, padding int) string {
+	tmpl := fmt.Sprintf(`%%-%ds`, padding)
+	return fmt.Sprintf(tmpl, s)
+}
+
+// localFlagUsages 返回本地化后的 flag 帮助文本，将 "default" 替换为当前语言文本。
+func localFlagUsages(cmd *cobra.Command) string {
+	defaultLabel := domain.T(domain.MsgFlagDefault)
+	usages := cmd.LocalFlags().FlagUsages()
+	return strings.Replace(usages, "(default ", "("+defaultLabel+" ", -1)
+}
+
+// inheritedFlagUsages 返回本地化后的全局 flag 帮助文本。
+func inheritedFlagUsages(cmd *cobra.Command) string {
+	defaultLabel := domain.T(domain.MsgFlagDefault)
+	usages := cmd.InheritedFlags().FlagUsages()
+	return strings.Replace(usages, "(default ", "("+defaultLabel+" ", -1)
+}
+
+// i18nUsageFunc 自定义 UsageFunc，使用本地化的 flag 帮助文本。
+func i18nUsageFunc(cmd *cobra.Command) error {
+	tmpl := cmd.UsageTemplate()
+
+	// 将模板中的 .LocalFlags.FlagUsages 和 .InheritedFlags.FlagUsages
+	// 替换为预处理后的本地化版本
+	tmpl = strings.ReplaceAll(tmpl,
+		"{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}",
+		"{{.LocalFlagUsages | trimTrailingWhitespaces}}")
+	tmpl = strings.ReplaceAll(tmpl,
+		"{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}",
+		"{{.InheritedFlagUsages | trimTrailingWhitespaces}}")
+
+	funcMap := template.FuncMap{
+		"rpad":                    rpad,
+		"trimTrailingWhitespaces": strings.TrimSpace,
+	}
+
+	// 将命令包装为带本地化字段的结构体
+	data := struct {
+		*cobra.Command
+		LocalFlagUsages     string
+		InheritedFlagUsages string
+	}{
+		Command:             cmd,
+		LocalFlagUsages:     localFlagUsages(cmd),
+		InheritedFlagUsages: inheritedFlagUsages(cmd),
+	}
+
+	t, err := template.New("usage").Funcs(funcMap).Parse(tmpl)
+	if err != nil {
+		return err
+	}
+
+	buf := new(bytes.Buffer)
+	if err := t.Execute(buf, data); err != nil {
+		return err
+	}
+
+	fmt.Fprint(cmd.OutOrStdout(), buf.String())
+	return nil
+}
+
 func init() {
 	home, _ := os.UserHomeDir()
 	defaultHome := filepath.Join(home, ".distill")
@@ -173,6 +244,12 @@ func init() {
 
 	// 提前注册 help flag 以便 applyLangToCommands 能修改其 Usage
 	rootCmd.Flags().BoolP("help", "h", false, domain.T(domain.MsgFlagHelp))
+
+	// 设置自定义 UsageFunc，使用本地化的 "default" 标签
+	rootCmd.SetUsageFunc(i18nUsageFunc)
+	for _, c := range rootCmd.Commands() {
+		c.SetUsageFunc(i18nUsageFunc)
+	}
 }
 
 // setupLogger 根据配置文件和 CLI 参数初始化全局 slog 日志。
