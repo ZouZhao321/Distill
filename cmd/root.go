@@ -47,13 +47,12 @@ func init() {
 
 // setupLogger 根据配置文件和 CLI 参数初始化全局 slog 日志。
 // 优先级：CLI flag > config.toml > 默认值。
-// 日志同时输出到 stderr 和仓库 log 目录下的日志文件（如果目录存在）。
+// 仓库已初始化时日志只写入文件；未初始化时 fallback 到 stderr。
 func setupLogger() {
 	// 尝试从 config.toml 加载日志配置
 	configPath := filepath.Join(storeHome, "config", "config.toml")
 	config, err := domain.LoadConfig(configPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "警告: 读取配置文件失败: %v\n", err)
 		config = &domain.Config{}
 	}
 
@@ -76,18 +75,20 @@ func setupLogger() {
 
 	level := parseLogLevel(levelStr)
 
-	// 日志文件输出目标：仅在 log 目录存在时写入文件
+	// 确定日志输出目标：优先写文件，仅在文件不可用时 fallback 到 stderr
 	logDir := filepath.Join(storeHome, "log")
-	var writers []io.Writer
-	writers = append(writers, os.Stderr)
-
+	var writer io.Writer
 	logFile, err := openLogFile(logDir)
 	if err == nil && logFile != nil {
-		writers = append(writers, logFile)
+		writer = logFile
+	} else {
+		writer = os.Stderr
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "警告: 打开日志文件失败: %v\n", err)
+		}
 	}
 
 	var handler slog.Handler
-	writer := io.MultiWriter(writers...)
 	switch format {
 	case "json":
 		handler = slog.NewJSONHandler(writer, &slog.HandlerOptions{Level: level})
@@ -98,11 +99,11 @@ func setupLogger() {
 }
 
 // openLogFile 在 logDir 下创建或打开当天的日志文件。
-// 如果 logDir 不存在，返回 nil（静默跳过文件日志）。
+// 如果 logDir 不存在，返回 nil（调用方将 fallback 到 stderr）。
 func openLogFile(logDir string) (*os.File, error) {
 	info, err := os.Stat(logDir)
 	if err != nil || !info.IsDir() {
-		return nil, nil // log 目录不存在，跳过文件日志
+		return nil, nil // log 目录不存在，fallback 到 stderr
 	}
 
 	filename := filepath.Join(logDir, fmt.Sprintf("distill-%s.log", time.Now().Format("2006-01-02")))
