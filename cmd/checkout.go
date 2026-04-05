@@ -72,5 +72,6 @@ var checkoutCmd = &cobra.Command{
 func init() {
 	checkoutCmd.Flags().StringVarP(&checkoutOutput, "output", "o", "", domain.T(domain.MsgFlagOutput))
 	checkoutCmd.Flags().StringVar(&checkoutOverwrite, "overwrite", "skip", domain.T(domain.MsgFlagOverwrite))
+	registerHelpFlag(checkoutCmd)
 	rootCmd.AddCommand(checkoutCmd)
 }

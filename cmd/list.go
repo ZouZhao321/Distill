@@ -51,6 +51,7 @@ var listCmd = &cobra.Command{
 
 func init() {
 	listCmd.Flags().StringVar(&listFormat, "format", "table", domain.T(domain.MsgFlagFormat))
+	registerHelpFlag(listCmd)
 	rootCmd.AddCommand(listCmd)
 }
 

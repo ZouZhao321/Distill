@@ -23,13 +23,12 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:   "distill",
-	Short: domain.T(domain.MsgRootShort),
-	Long:  domain.T(domain.MsgRootLong),
+	Short: "distill", // 占位，在 applyLang 中动态设置
+	Long:  "distill",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// cobra 解析完 flag 后，lang 变量已被赋值
 		domain.SetLang(lang)
-		// 设置语言后重新绑定根命令的 Short/Long
-		cmd.Short = domain.T(domain.MsgRootShort)
-		cmd.Long = domain.T(domain.MsgRootLong)
+		applyLangToCommands(cmd)
 		setupLogger()
 	},
 }
@@ -37,19 +36,7 @@ var rootCmd = &cobra.Command{
 // Execute 启动根命令并执行。
 func Execute() {
 	// 预解析 --lang 参数，在 cobra 帮助渲染之前设置语言
-	for i, arg := range os.Args[1:] {
-		if arg == "--lang" && i+1 < len(os.Args[1:]) {
-			domain.SetLang(os.Args[1:][i+1])
-			break
-		}
-		if len(arg) > 7 && arg[:7] == "--lang=" {
-			domain.SetLang(arg[7:])
-			break
-		}
-	}
-
-	// 设置语言后更新所有命令的文案
-	applyLangToCommands()
+	preParseLang()
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -57,11 +44,34 @@ func Execute() {
 	}
 }
 
-// applyLangToCommands 将当前语言的文案应用到根命令和所有子命令。
-func applyLangToCommands() {
-	rootCmd.Short = domain.T(domain.MsgRootShort)
-	rootCmd.Long = domain.T(domain.MsgRootLong)
+// preParseLang 在 cobra 解析前预解析 --lang 参数并应用文案。
+func preParseLang() {
+	for i, arg := range os.Args[1:] {
+		if arg == "--lang" && i+1 < len(os.Args[1:]) {
+			lang = os.Args[1:][i+1]
+			break
+		}
+		if len(arg) > 7 && arg[:7] == "--lang=" {
+			lang = arg[7:]
+			break
+		}
+	}
+	domain.SetLang(lang)
 
+	// 强制 cobra 提前注册内置命令（通常在 Execute 时才注册），
+	// 这样 applyLangToCommands 能遍历到它们
+	rootCmd.InitDefaultHelpCmd()
+	rootCmd.InitDefaultCompletionCmd()
+
+	applyLangToCommands(rootCmd)
+}
+
+// applyLangToCommands 将当前语言的文案应用到根命令和所有子命令。
+func applyLangToCommands(root *cobra.Command) {
+	root.Short = domain.T(domain.MsgRootShort)
+	root.Long = domain.T(domain.MsgRootLong)
+
+	// 更新自定义子命令
 	shortMap := map[*cobra.Command]domain.MsgKey{
 		addCmd:      domain.MsgCmdAddShort,
 		checkoutCmd: domain.MsgCmdCheckoutShort,
@@ -86,6 +96,61 @@ func applyLangToCommands() {
 	for cmd, key := range longMap {
 		cmd.Long = domain.T(key)
 	}
+
+	// 更新 cobra 内置命令的描述
+	for _, c := range root.Commands() {
+		switch c.Name() {
+		case "help":
+			c.Short = domain.T(domain.MsgCmdHelpShort)
+		case "completion":
+			c.Short = domain.T(domain.MsgCmdCompletionShort)
+		}
+	}
+
+	// 更新全局 PersistentFlags 的 help 文本
+	if f := root.PersistentFlags().Lookup("home"); f != nil {
+		f.Usage = domain.T(domain.MsgFlagHome)
+	}
+	if f := root.PersistentFlags().Lookup("log-format"); f != nil {
+		f.Usage = domain.T(domain.MsgFlagLogFormat)
+	}
+	if f := root.PersistentFlags().Lookup("log-level"); f != nil {
+		f.Usage = domain.T(domain.MsgFlagLogLevel)
+	}
+	if f := root.PersistentFlags().Lookup("lang"); f != nil {
+		f.Usage = domain.T(domain.MsgFlagLang)
+	}
+
+	// 更新各子命令的 LocalFlags help 文本
+	updateFlagHelp(addCmd, "as", domain.MsgFlagAs)
+	updateFlagHelp(checkoutCmd, "output", domain.MsgFlagOutput)
+	updateFlagHelp(checkoutCmd, "overwrite", domain.MsgFlagOverwrite)
+	updateFlagHelp(exportCmd, "output", domain.MsgFlagOutput)
+	updateFlagHelp(gcCmd, "dry-run", domain.MsgFlagDryRun)
+	updateFlagHelp(initCmd, "trash", domain.MsgFlagTrash)
+	updateFlagHelp(listCmd, "format", domain.MsgFlagFormat)
+
+	// 更新 cobra 内置 -h/--help flag（根命令 + 所有子命令）
+	if f := root.Flags().Lookup("help"); f != nil {
+		f.Usage = domain.T(domain.MsgFlagHelp)
+	}
+	for _, c := range root.Commands() {
+		if f := c.Flags().Lookup("help"); f != nil {
+			f.Usage = domain.T(domain.MsgFlagHelp)
+		}
+	}
+}
+
+// updateFlagHelp 更新指定命令中某个 flag 的 help 文本。
+func updateFlagHelp(cmd *cobra.Command, name string, key domain.MsgKey) {
+	if f := cmd.Flags().Lookup(name); f != nil {
+		f.Usage = domain.T(key)
+	}
+}
+
+// registerHelpFlag 为命令提前注册 --help flag，使 applyLangToCommands 能修改其 Usage。
+func registerHelpFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolP("help", "h", false, domain.T(domain.MsgFlagHelp))
 }
 
 func init() {
@@ -95,6 +160,19 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logFormat, "log-format", "text", domain.T(domain.MsgFlagLogFormat))
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", domain.T(domain.MsgFlagLogLevel))
 	rootCmd.PersistentFlags().StringVar(&lang, "lang", "zh", domain.T(domain.MsgFlagLang))
+
+	// 替换 cobra 内置 help 命令
+	helpCmd := &cobra.Command{
+		Use:   "help [command]",
+		Short: domain.T(domain.MsgCmdHelpShort),
+		Run: func(cmd *cobra.Command, args []string) {
+			rootCmd.Help()
+		},
+	}
+	rootCmd.SetHelpCommand(helpCmd)
+
+	// 提前注册 help flag 以便 applyLangToCommands 能修改其 Usage
+	rootCmd.Flags().BoolP("help", "h", false, domain.T(domain.MsgFlagHelp))
 }
 
 // setupLogger 根据配置文件和 CLI 参数初始化全局 slog 日志。

@@ -70,5 +70,6 @@ var initCmd = &cobra.Command{
 func init() {
 	defaultTrash, _ := os.UserHomeDir()
 	initCmd.Flags().StringVar(&trashPath, "trash", filepath.Join(defaultTrash, ".distill-trash"), domain.T(domain.MsgFlagTrash))
+	registerHelpFlag(initCmd)
 	rootCmd.AddCommand(initCmd)
 }

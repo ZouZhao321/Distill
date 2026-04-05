@@ -100,5 +100,6 @@ var addCmd = &cobra.Command{
 
 func init() {
 	addCmd.Flags().StringVarP(&addName, "as", "n", "", domain.T(domain.MsgFlagAs))
+	registerHelpFlag(addCmd)
 	rootCmd.AddCommand(addCmd)
 }

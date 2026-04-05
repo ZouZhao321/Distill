@@ -97,6 +97,13 @@ const (
 	MsgErrRemoveFailed
 	MsgErrTrashBackupFailed
 
+	// cobra 内置命令
+	MsgCmdHelpShort
+	MsgCmdCompletionShort
+
+	// cobra 内置 flag
+	MsgFlagHelp
+
 	// 交互提示
 	MsgCheckoutFileExists
 	MsgCheckoutOverwritePrompt
@@ -191,6 +198,13 @@ var zh = map[MsgKey]string{
 	MsgErrRemoveFailed:       "移除失败: %w",
 	MsgErrTrashBackupFailed:  "回收站备份失败: %v",
 
+	// cobra 内置命令
+	MsgCmdHelpShort:       "查看命令帮助",
+	MsgCmdCompletionShort: "生成自动补全脚本",
+
+	// cobra 内置 flag
+	MsgFlagHelp: "显示帮助信息",
+
 	// 交互提示
 	MsgCheckoutFileExists:      "文件已存在: %s",
 	MsgCheckoutOverwritePrompt: "是否覆盖？(y/N): ",
@@ -275,6 +289,13 @@ var en = map[MsgKey]string{
 	MsgErrReadManifestFailed: "Failed to read manifest: %w",
 	MsgErrRemoveFailed:       "Failed to remove asset: %w",
 	MsgErrTrashBackupFailed:  "Warning: trash backup failed: %v",
+
+	// cobra 内置命令
+	MsgCmdHelpShort:       "Help about any command",
+	MsgCmdCompletionShort: "Generate the autocompletion script for the specified shell",
+
+	// cobra 内置 flag
+	MsgFlagHelp: "Show help information",
 
 	// 交互提示
 	MsgCheckoutFileExists:      "File already exists: %s",

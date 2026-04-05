@@ -146,5 +146,8 @@ func allKeys() []MsgKey {
 		MsgCheckoutOverwritePrompt,
 		MsgCheckoutSkipped,
 		MsgWarnLogOpenFailed,
+		MsgCmdHelpShort,
+		MsgCmdCompletionShort,
+		MsgFlagHelp,
 	}
 }

@@ -44,5 +44,6 @@ var exportCmd = &cobra.Command{
 
 func init() {
 	exportCmd.Flags().StringVarP(&exportOutput, "output", "o", "", domain.T(domain.MsgFlagOutput))
+	registerHelpFlag(exportCmd)
 	rootCmd.AddCommand(exportCmd)
 }

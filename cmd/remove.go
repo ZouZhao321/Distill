@@ -69,5 +69,6 @@ func backupToTrash(manifest *domain.Manifest, trashPath string) error {
 }
 
 func init() {
+	registerHelpFlag(removeCmd)
 	rootCmd.AddCommand(removeCmd)
 }

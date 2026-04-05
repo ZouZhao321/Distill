@@ -57,5 +57,6 @@ var gcCmd = &cobra.Command{
 
 func init() {
 	gcCmd.Flags().BoolVar(&gcDryRun, "dry-run", false, domain.T(domain.MsgFlagDryRun))
+	registerHelpFlag(gcCmd)
 	rootCmd.AddCommand(gcCmd)
 }
