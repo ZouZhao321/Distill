@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
 	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
@@ -13,8 +14,8 @@ var gcDryRun bool
 
 var gcCmd = &cobra.Command{
 	Use:   "gc",
-	Short: "垃圾回收",
-	Long:  "清理未被任何清单引用的孤立对象，释放磁盘空间。",
+	Short: domain.T(domain.MsgCmdGcShort),
+	Long:  domain.T(domain.MsgCmdGcLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		objectStore := store.NewObjectStore(filepath.Join(storeHome, "objects"))
 		manifestStore := store.NewManifestStore(
@@ -27,12 +28,12 @@ var gcCmd = &cobra.Command{
 		if gcDryRun {
 			orphans, err := uc.ExecuteDryRun()
 			if err != nil {
-				return fmt.Errorf("GC 预检失败: %w", err)
+				return fmt.Errorf(domain.T(domain.MsgErrGcDryRunFailed), err)
 			}
 			if len(orphans) == 0 {
-				fmt.Println("没有发现孤立对象。")
+				fmt.Println(domain.T(domain.MsgGcNoOrphans))
 			} else {
-				fmt.Printf("发现 %d 个孤立对象:\n", len(orphans))
+				fmt.Printf(domain.T(domain.MsgGcOrphanList)+"\n", len(orphans))
 				for _, h := range orphans {
 					fmt.Printf("  %s\n", h)
 				}
@@ -42,19 +43,20 @@ var gcCmd = &cobra.Command{
 
 		cleaned, err := uc.Execute()
 		if err != nil {
-			return fmt.Errorf("GC 执行失败: %w", err)
+			return fmt.Errorf(domain.T(domain.MsgErrGcFailed), err)
 		}
 
 		if cleaned == 0 {
-			fmt.Println("仓库已是干净状态，无需清理。")
+			fmt.Println(domain.T(domain.MsgGcAlreadyClean))
 		} else {
-			fmt.Printf("已清理 %d 个孤立对象。\n", cleaned)
+			fmt.Printf(domain.T(domain.MsgGcClean)+"\n", cleaned)
 		}
 		return nil
 	},
 }
 
 func init() {
-	gcCmd.Flags().BoolVar(&gcDryRun, "dry-run", false, "仅列出孤立对象，不删除")
+	gcCmd.Flags().BoolVar(&gcDryRun, "dry-run", false, domain.T(domain.MsgFlagDryRun))
+	registerHelpFlag(gcCmd)
 	rootCmd.AddCommand(gcCmd)
 }

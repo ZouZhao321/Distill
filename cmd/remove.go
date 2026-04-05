@@ -14,8 +14,8 @@ import (
 
 var removeCmd = &cobra.Command{
 	Use:   "remove <name>",
-	Short: "移除资产",
-	Long:  "从仓库中移除指定名称的资产。清单和引用将被删除，对象数据保留，等待 GC 清理。",
+	Short: domain.T(domain.MsgCmdRemoveShort),
+	Long:  domain.T(domain.MsgCmdRemoveLong),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
@@ -25,30 +25,30 @@ var removeCmd = &cobra.Command{
 			filepath.Join(storeHome, "config", "refs.json"),
 		)
 
-		// Check if asset exists first for better error message
+		// 检查资产是否存在
 		ref, err := manifestStore.GetRef(name)
 		if err != nil {
-			return fmt.Errorf("资产 %q 不存在", name)
+			return fmt.Errorf(domain.T(domain.MsgErrAssetNotFound), name)
 		}
 
-		// Backup manifest to trash before removal
+		// 移除前备份清单到回收站
 		manifest, err := manifestStore.GetManifest(ref.Manifest)
 		if err != nil {
-			return fmt.Errorf("无法读取清单: %w", err)
+			return fmt.Errorf(domain.T(domain.MsgErrReadManifestFailed), err)
 		}
 
 		if trashPath != "" {
 			if err := backupToTrash(manifest, trashPath); err != nil {
-				fmt.Fprintf(os.Stderr, "警告: 回收站备份失败: %v\n", err)
+				fmt.Fprintf(os.Stderr, domain.T(domain.MsgErrTrashBackupFailed)+"\n", err)
 			}
 		}
 
 		uc := usecase.NewRemoveUseCase(manifestStore)
 		if err := uc.Execute(name); err != nil {
-			return fmt.Errorf("移除失败: %w", err)
+			return fmt.Errorf(domain.T(domain.MsgErrRemoveFailed), err)
 		}
 
-		fmt.Printf("已移除: %s\n", name)
+		fmt.Printf(domain.T(domain.MsgRemoved)+"\n", name)
 		return nil
 	},
 }
@@ -69,5 +69,6 @@ func backupToTrash(manifest *domain.Manifest, trashPath string) error {
 }
 
 func init() {
+	registerHelpFlag(removeCmd)
 	rootCmd.AddCommand(removeCmd)
 }
