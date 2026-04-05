@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/spf13/cobra"
 )
 
@@ -44,10 +45,36 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "日志级别 (debug|info|warn|error)")
 }
 
-// setupLogger 根据 CLI 参数初始化全局 slog 日志。
+// setupLogger 根据配置文件和 CLI 参数初始化全局 slog 日志。
+// 优先级：CLI flag > config.toml > 默认值。
 // 日志同时输出到 stderr 和仓库 log 目录下的日志文件（如果目录存在）。
 func setupLogger() {
-	level := parseLogLevel(logLevel)
+	// 尝试从 config.toml 加载日志配置
+	configPath := filepath.Join(storeHome, "config", "config.toml")
+	config, err := domain.LoadConfig(configPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "警告: 读取配置文件失败: %v\n", err)
+		config = &domain.Config{}
+	}
+
+	// CLI flag 为空时使用配置文件值，配置文件值也为空时使用默认值
+	format := logFormat
+	if format == "" {
+		format = config.Log.Format
+	}
+	if format == "" {
+		format = "text"
+	}
+
+	levelStr := logLevel
+	if levelStr == "" {
+		levelStr = config.Log.Level
+	}
+	if levelStr == "" {
+		levelStr = "info"
+	}
+
+	level := parseLogLevel(levelStr)
 
 	// 日志文件输出目标：仅在 log 目录存在时写入文件
 	logDir := filepath.Join(storeHome, "log")
@@ -61,7 +88,7 @@ func setupLogger() {
 
 	var handler slog.Handler
 	writer := io.MultiWriter(writers...)
-	switch logFormat {
+	switch format {
 	case "json":
 		handler = slog.NewJSONHandler(writer, &slog.HandlerOptions{Level: level})
 	default:
