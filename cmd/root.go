@@ -4,10 +4,13 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
+	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/spf13/cobra"
 )
 
@@ -42,18 +45,73 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "日志级别 (debug|info|warn|error)")
 }
 
-// setupLogger 根据 CLI 参数初始化全局 slog 日志。
+// setupLogger 根据配置文件和 CLI 参数初始化全局 slog 日志。
+// 优先级：CLI flag > config.toml > 默认值。
+// 仓库已初始化时日志只写入文件；未初始化时 fallback 到 stderr。
 func setupLogger() {
-	level := parseLogLevel(logLevel)
+	// 尝试从 config.toml 加载日志配置
+	configPath := filepath.Join(storeHome, "config", "config.toml")
+	config, err := domain.LoadConfig(configPath)
+	if err != nil {
+		config = &domain.Config{}
+	}
+
+	// CLI flag 为空时使用配置文件值，配置文件值也为空时使用默认值
+	format := logFormat
+	if format == "" {
+		format = config.Log.Format
+	}
+	if format == "" {
+		format = "text"
+	}
+
+	levelStr := logLevel
+	if levelStr == "" {
+		levelStr = config.Log.Level
+	}
+	if levelStr == "" {
+		levelStr = "info"
+	}
+
+	level := parseLogLevel(levelStr)
+
+	// 确定日志输出目标：优先写文件，仅在文件不可用时 fallback 到 stderr
+	logDir := filepath.Join(storeHome, "log")
+	var writer io.Writer
+	logFile, err := openLogFile(logDir)
+	if err == nil && logFile != nil {
+		writer = logFile
+	} else {
+		writer = os.Stderr
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "警告: 打开日志文件失败: %v\n", err)
+		}
+	}
 
 	var handler slog.Handler
-	switch logFormat {
+	switch format {
 	case "json":
-		handler = slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: level})
+		handler = slog.NewJSONHandler(writer, &slog.HandlerOptions{Level: level})
 	default:
-		handler = slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
+		handler = slog.NewTextHandler(writer, &slog.HandlerOptions{Level: level})
 	}
 	slog.SetDefault(slog.New(handler))
+}
+
+// openLogFile 在 logDir 下创建或打开当天的日志文件。
+// 如果 logDir 不存在，返回 nil（调用方将 fallback 到 stderr）。
+func openLogFile(logDir string) (*os.File, error) {
+	info, err := os.Stat(logDir)
+	if err != nil || !info.IsDir() {
+		return nil, nil // log 目录不存在，fallback 到 stderr
+	}
+
+	filename := filepath.Join(logDir, fmt.Sprintf("distill-%s.log", time.Now().Format("2006-01-02")))
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
 // parseLogLevel 将字符串日志级别转换为 slog.Level。

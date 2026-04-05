@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -19,6 +20,7 @@ var initCmd = &cobra.Command{
 			filepath.Join(storeHome, "objects"),
 			filepath.Join(storeHome, "manifests"),
 			filepath.Join(storeHome, "config"),
+			filepath.Join(storeHome, "log"),
 		}
 		for _, d := range dirs {
 			if err := os.MkdirAll(d, 0755); err != nil {
@@ -26,13 +28,17 @@ var initCmd = &cobra.Command{
 			}
 		}
 
+		// 路径使用正斜杠，避免 TOML 解析器将 Windows 反斜杠误读为转义字符
+		home := strings.ReplaceAll(storeHome, "\\", "/")
+		trash := strings.ReplaceAll(trashPath, "\\", "/")
+
 		configContent := `[core]
     version = "1"
     objects_format = "plain"
 
 [store]
-    home = "` + storeHome + `"
-    trash_path = "` + trashPath + `"
+    home = "` + home + `"
+    trash_path = "` + trash + `"
 
 [checkout]
     overwrite = "ask"
