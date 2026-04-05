@@ -4,9 +4,11 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -43,17 +45,45 @@ func init() {
 }
 
 // setupLogger 根据 CLI 参数初始化全局 slog 日志。
+// 日志同时输出到 stderr 和仓库 log 目录下的日志文件（如果目录存在）。
 func setupLogger() {
 	level := parseLogLevel(logLevel)
 
+	// 日志文件输出目标：仅在 log 目录存在时写入文件
+	logDir := filepath.Join(storeHome, "log")
+	var writers []io.Writer
+	writers = append(writers, os.Stderr)
+
+	logFile, err := openLogFile(logDir)
+	if err == nil && logFile != nil {
+		writers = append(writers, logFile)
+	}
+
 	var handler slog.Handler
+	writer := io.MultiWriter(writers...)
 	switch logFormat {
 	case "json":
-		handler = slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: level})
+		handler = slog.NewJSONHandler(writer, &slog.HandlerOptions{Level: level})
 	default:
-		handler = slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
+		handler = slog.NewTextHandler(writer, &slog.HandlerOptions{Level: level})
 	}
 	slog.SetDefault(slog.New(handler))
+}
+
+// openLogFile 在 logDir 下创建或打开当天的日志文件。
+// 如果 logDir 不存在，返回 nil（静默跳过文件日志）。
+func openLogFile(logDir string) (*os.File, error) {
+	info, err := os.Stat(logDir)
+	if err != nil || !info.IsDir() {
+		return nil, nil // log 目录不存在，跳过文件日志
+	}
+
+	filename := filepath.Join(logDir, fmt.Sprintf("distill-%s.log", time.Now().Format("2006-01-02")))
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
 // parseLogLevel 将字符串日志级别转换为 slog.Level。
