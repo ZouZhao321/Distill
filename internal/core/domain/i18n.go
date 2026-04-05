@@ -103,6 +103,7 @@ const (
 
 	// cobra 内置 flag
 	MsgFlagHelp
+	MsgFlagVersion
 
 	// cobra 帮助模板
 	MsgHelpTip
@@ -207,7 +208,8 @@ var zh = map[MsgKey]string{
 	MsgCmdCompletionShort: "生成自动补全脚本",
 
 	// cobra 内置 flag
-	MsgFlagHelp: "显示帮助信息",
+	MsgFlagHelp:    "显示帮助信息",
+	MsgFlagVersion: "显示版本信息",
 
 	// cobra 帮助模板
 	MsgHelpTip:     `使用 "distill [命令] --help" 获取更多关于某条命令的信息。`,
@@ -303,7 +305,8 @@ var en = map[MsgKey]string{
 	MsgCmdCompletionShort: "Generate the autocompletion script for the specified shell",
 
 	// cobra 内置 flag
-	MsgFlagHelp: "Show help information",
+	MsgFlagHelp:    "Show help information",
+	MsgFlagVersion: "Show version information",
 
 	// cobra 帮助模板
 	MsgHelpTip:     `Use "distill [command] --help" for more information about a command.`,

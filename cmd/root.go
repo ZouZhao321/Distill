@@ -22,12 +22,14 @@ var (
 	logFormat string
 	logLevel  string
 	lang      string
+	version   = "v0.1.0-dev" // 默认版本，构建时可通过 -ldflags 覆盖
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "distill",
-	Short: "distill", // 占位，在 applyLang 中动态设置
-	Long:  "distill",
+	Use:     "distill",
+	Short:   "distill", // 占位，在 applyLang 中动态设置
+	Long:    "distill",
+	Version: version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// cobra 解析完 flag 后，lang 变量已被赋值
 		domain.SetLang(lang)
@@ -65,6 +67,9 @@ func preParseLang() {
 	// 这样 applyLangToCommands 能遍历到它们
 	rootCmd.InitDefaultHelpCmd()
 	rootCmd.InitDefaultCompletionCmd()
+
+	// 强制提前注册 --version flag，使 applyLangToCommands 能更新其 Usage
+	rootCmd.InitDefaultVersionFlag()
 
 	applyLangToCommands(rootCmd)
 }
@@ -128,6 +133,12 @@ func applyLangToCommands(root *cobra.Command) {
 	if f := root.PersistentFlags().Lookup("lang"); f != nil {
 		f.Usage = domain.T(domain.MsgFlagLang)
 	}
+	if f := root.Flags().Lookup("version"); f != nil {
+		f.Usage = domain.T(domain.MsgFlagVersion)
+	}
+
+	// 自定义版本输出模板，支持本地化
+	root.SetVersionTemplate(fmt.Sprintf("%s version {{.Version}}\n", root.Use))
 
 	// 更新各子命令的 LocalFlags help 文本
 	updateFlagHelp(addCmd, "as", domain.MsgFlagAs)
