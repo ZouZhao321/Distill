@@ -18,31 +18,83 @@ var (
 	storeHome string
 	logFormat string
 	logLevel  string
+	lang      string
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "distill",
-	Short: "Distill - 资产管理 CLI 工具",
-	Long:  "Distill 是一个 Go 语言 CLI 工具，用于资产的导入、管理和导出。基于内容寻址存储实现物理级去重。",
+	Short: domain.T(domain.MsgRootShort),
+	Long:  domain.T(domain.MsgRootLong),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		domain.SetLang(lang)
+		// 设置语言后重新绑定根命令的 Short/Long
+		cmd.Short = domain.T(domain.MsgRootShort)
+		cmd.Long = domain.T(domain.MsgRootLong)
 		setupLogger()
 	},
 }
 
 // Execute 启动根命令并执行。
 func Execute() {
+	// 预解析 --lang 参数，在 cobra 帮助渲染之前设置语言
+	for i, arg := range os.Args[1:] {
+		if arg == "--lang" && i+1 < len(os.Args[1:]) {
+			domain.SetLang(os.Args[1:][i+1])
+			break
+		}
+		if len(arg) > 7 && arg[:7] == "--lang=" {
+			domain.SetLang(arg[7:])
+			break
+		}
+	}
+
+	// 设置语言后更新所有命令的文案
+	applyLangToCommands()
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
+// applyLangToCommands 将当前语言的文案应用到根命令和所有子命令。
+func applyLangToCommands() {
+	rootCmd.Short = domain.T(domain.MsgRootShort)
+	rootCmd.Long = domain.T(domain.MsgRootLong)
+
+	shortMap := map[*cobra.Command]domain.MsgKey{
+		addCmd:      domain.MsgCmdAddShort,
+		checkoutCmd: domain.MsgCmdCheckoutShort,
+		exportCmd:   domain.MsgCmdExportShort,
+		gcCmd:       domain.MsgCmdGcShort,
+		initCmd:     domain.MsgCmdInitShort,
+		listCmd:     domain.MsgCmdListShort,
+		removeCmd:   domain.MsgCmdRemoveShort,
+	}
+	longMap := map[*cobra.Command]domain.MsgKey{
+		addCmd:      domain.MsgCmdAddLong,
+		checkoutCmd: domain.MsgCmdCheckoutLong,
+		exportCmd:   domain.MsgCmdExportLong,
+		gcCmd:       domain.MsgCmdGcLong,
+		initCmd:     domain.MsgCmdInitLong,
+		listCmd:     domain.MsgCmdListLong,
+		removeCmd:   domain.MsgCmdRemoveLong,
+	}
+	for cmd, key := range shortMap {
+		cmd.Short = domain.T(key)
+	}
+	for cmd, key := range longMap {
+		cmd.Long = domain.T(key)
+	}
+}
+
 func init() {
 	home, _ := os.UserHomeDir()
 	defaultHome := filepath.Join(home, ".distill")
-	rootCmd.PersistentFlags().StringVar(&storeHome, "home", defaultHome, "仓库路径")
-	rootCmd.PersistentFlags().StringVar(&logFormat, "log-format", "text", "日志格式 (text|json)")
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "日志级别 (debug|info|warn|error)")
+	rootCmd.PersistentFlags().StringVar(&storeHome, "home", defaultHome, domain.T(domain.MsgFlagHome))
+	rootCmd.PersistentFlags().StringVar(&logFormat, "log-format", "text", domain.T(domain.MsgFlagLogFormat))
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", domain.T(domain.MsgFlagLogLevel))
+	rootCmd.PersistentFlags().StringVar(&lang, "lang", "zh", domain.T(domain.MsgFlagLang))
 }
 
 // setupLogger 根据配置文件和 CLI 参数初始化全局 slog 日志。
@@ -84,7 +136,7 @@ func setupLogger() {
 	} else {
 		writer = os.Stderr
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "警告: 打开日志文件失败: %v\n", err)
+			fmt.Fprintf(os.Stderr, domain.T(domain.MsgWarnLogOpenFailed), err)
 		}
 	}
 

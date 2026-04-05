@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
 	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
@@ -13,8 +14,8 @@ var exportOutput string
 
 var exportCmd = &cobra.Command{
 	Use:   "export <name>",
-	Short: "导出资产为 ZIP 压缩包",
-	Long:  "将指定资产从仓库打包导出为 ZIP 文件。",
+	Short: domain.T(domain.MsgCmdExportShort),
+	Long:  domain.T(domain.MsgCmdExportLong),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
@@ -33,15 +34,15 @@ var exportCmd = &cobra.Command{
 		uc := usecase.NewExportUseCase(manifestStore, objectStore)
 		err := uc.Execute(name, outputPath)
 		if err != nil {
-			return fmt.Errorf("导出失败: %w", err)
+			return fmt.Errorf(domain.T(domain.MsgErrExportFailed), err)
 		}
 
-		fmt.Printf("已导出: %s -> %s\n", name, outputPath)
+		fmt.Printf(domain.T(domain.MsgExported)+"\n", name, outputPath)
 		return nil
 	},
 }
 
 func init() {
-	exportCmd.Flags().StringVarP(&exportOutput, "output", "o", "", "输出 ZIP 文件路径")
+	exportCmd.Flags().StringVarP(&exportOutput, "output", "o", "", domain.T(domain.MsgFlagOutput))
 	rootCmd.AddCommand(exportCmd)
 }

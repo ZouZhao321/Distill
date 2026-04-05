@@ -18,8 +18,8 @@ var checkoutOverwrite string
 
 var checkoutCmd = &cobra.Command{
 	Use:   "checkout <name>",
-	Short: "从仓库还原资产到目录",
-	Long:  "将指定资产从仓库还原到目标目录，保留原始目录结构。",
+	Short: domain.T(domain.MsgCmdCheckoutShort),
+	Long:  domain.T(domain.MsgCmdCheckoutLong),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
@@ -44,9 +44,8 @@ var checkoutCmd = &cobra.Command{
 		err := uc.Execute(name, outputDir, overwrite)
 		if err != nil {
 			if err == domain.ErrAlreadyExists && overwrite == "ask" {
-				// 交互式确认是否覆盖
-				fmt.Printf("文件已存在: %s\n", outputDir)
-				fmt.Print("是否覆盖？(y/N): ")
+				fmt.Printf(domain.T(domain.MsgCheckoutFileExists)+"\n", outputDir)
+				fmt.Print(domain.T(domain.MsgCheckoutOverwritePrompt))
 				reader := bufio.NewReader(os.Stdin)
 				answer, _ := reader.ReadString('\n')
 				answer = strings.TrimSpace(strings.ToLower(answer))
@@ -54,24 +53,24 @@ var checkoutCmd = &cobra.Command{
 				if answer == "y" || answer == "yes" {
 					err = uc.Execute(name, outputDir, "force")
 					if err != nil {
-						return fmt.Errorf("还原失败: %w", err)
+						return fmt.Errorf(domain.T(domain.MsgErrCheckoutFailed), err)
 					}
 				} else {
-					fmt.Println("已跳过。")
+					fmt.Println(domain.T(domain.MsgCheckoutSkipped))
 					return nil
 				}
 			} else {
-				return fmt.Errorf("还原失败: %w", err)
+				return fmt.Errorf(domain.T(domain.MsgErrCheckoutFailed), err)
 			}
 		}
 
-		fmt.Printf("已还原: %s -> %s\n", name, outputDir)
+		fmt.Printf(domain.T(domain.MsgCheckedOut)+"\n", name, outputDir)
 		return nil
 	},
 }
 
 func init() {
-	checkoutCmd.Flags().StringVarP(&checkoutOutput, "output", "o", "", "输出目录路径")
-	checkoutCmd.Flags().StringVar(&checkoutOverwrite, "overwrite", "skip", "覆盖策略 (skip|force|ask)")
+	checkoutCmd.Flags().StringVarP(&checkoutOutput, "output", "o", "", domain.T(domain.MsgFlagOutput))
+	checkoutCmd.Flags().StringVar(&checkoutOverwrite, "overwrite", "skip", domain.T(domain.MsgFlagOverwrite))
 	rootCmd.AddCommand(checkoutCmd)
 }

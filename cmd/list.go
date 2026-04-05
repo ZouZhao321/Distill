@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
+	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
 	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
@@ -15,8 +16,8 @@ var listFormat string
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "列出所有资产",
-	Long:  "显示仓库中所有已导入的资产列表。",
+	Short: domain.T(domain.MsgCmdListShort),
+	Long:  domain.T(domain.MsgCmdListLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		manifestStore := store.NewManifestStore(
 			filepath.Join(storeHome, "manifests"),
@@ -26,11 +27,11 @@ var listCmd = &cobra.Command{
 		uc := usecase.NewListAssetsUseCase(manifestStore)
 		items, err := uc.Execute()
 		if err != nil {
-			return fmt.Errorf("列表查询失败: %w", err)
+			return fmt.Errorf(domain.T(domain.MsgErrListFailed), err)
 		}
 
 		if len(items) == 0 {
-			fmt.Println("仓库为空，使用 distill add 添加资产")
+			fmt.Println(domain.T(domain.MsgListEmpty))
 			return nil
 		}
 
@@ -49,7 +50,7 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
-	listCmd.Flags().StringVar(&listFormat, "format", "table", "输出格式 (table|json)")
+	listCmd.Flags().StringVar(&listFormat, "format", "table", domain.T(domain.MsgFlagFormat))
 	rootCmd.AddCommand(listCmd)
 }
 
