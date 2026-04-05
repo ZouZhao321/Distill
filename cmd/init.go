@@ -19,6 +19,7 @@ var initCmd = &cobra.Command{
 			filepath.Join(storeHome, "objects"),
 			filepath.Join(storeHome, "manifests"),
 			filepath.Join(storeHome, "config"),
+			filepath.Join(storeHome, "log"),
 		}
 		for _, d := range dirs {
 			if err := os.MkdirAll(d, 0755); err != nil {
