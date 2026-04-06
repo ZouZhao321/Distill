@@ -99,6 +99,14 @@ func SaveConfigByHome(config *Config, storeHome string) error {
 	return SaveConfig(config, filepath.Join(storeHome, "config", "config.toml"))
 }
 
+// ConfigMeta 定义配置项的元数据，用于校验和展示。
+type ConfigMeta struct {
+	Key         string   // 配置键，如 "checkout.overwrite"
+	Description string   // 配置项的中文描述
+	Default     string   // 默认值
+	ValidValues []string // 合法的可选值，空列表表示任意字符串
+}
+
 // ConfigKeyMap 定义点号分隔的配置 key 到 Config struct 字段的映射。
 // 用于 config get/set 命令。
 var ConfigKeyMap = map[string]string{
@@ -111,6 +119,64 @@ var ConfigKeyMap = map[string]string{
 	"log.level":            "log.level",
 	"normalize.crlf_to_lf": "normalize.crlf_to_lf",
 	"lang":                 "lang",
+}
+
+// ConfigMetaMap 定义所有配置项的元数据。
+var ConfigMetaMap = map[string]ConfigMeta{
+	"core.version": {
+		Key:         "core.version",
+		Description: "配置格式版本号",
+		Default:     "1",
+		ValidValues: []string{"1"},
+	},
+	"core.objects_format": {
+		Key:         "core.objects_format",
+		Description: "对象存储格式",
+		Default:     "plain",
+		ValidValues: []string{"plain"},
+	},
+	"store.home": {
+		Key:         "store.home",
+		Description: "仓库存储根目录",
+		Default:     "~/.distill",
+		ValidValues: []string{},
+	},
+	"store.trash_path": {
+		Key:         "store.trash_path",
+		Description: "回收站目录路径",
+		Default:     "~/.distill-trash",
+		ValidValues: []string{},
+	},
+	"checkout.overwrite": {
+		Key:         "checkout.overwrite",
+		Description: "导出时的覆盖策略",
+		Default:     "ask",
+		ValidValues: []string{"ask", "skip", "force"},
+	},
+	"log.format": {
+		Key:         "log.format",
+		Description: "日志输出格式",
+		Default:     "text",
+		ValidValues: []string{"text", "json"},
+	},
+	"log.level": {
+		Key:         "log.level",
+		Description: "日志级别",
+		Default:     "info",
+		ValidValues: []string{"debug", "info", "warn", "error"},
+	},
+	"normalize.crlf_to_lf": {
+		Key:         "normalize.crlf_to_lf",
+		Description: "导出时将 CRLF 转换为 LF",
+		Default:     "true",
+		ValidValues: []string{"true", "false"},
+	},
+	"lang": {
+		Key:         "lang",
+		Description: "界面语言",
+		Default:     "zh",
+		ValidValues: []string{"zh", "en"},
+	},
 }
 
 // GetConfigValue 通过点号分隔的 key 从 Config 中获取值。
@@ -139,8 +205,42 @@ func GetConfigValue(config *Config, key string) (string, error) {
 	}
 }
 
+// ValidateConfigValue 校验配置值是否合法。
+func ValidateConfigValue(key, value string) error {
+	meta, ok := ConfigMetaMap[key]
+	if !ok {
+		return nil // 未定义的 key 不校验
+	}
+
+	if len(meta.ValidValues) == 0 {
+		return nil // 无可选值限制，不校验
+	}
+
+	for _, v := range meta.ValidValues {
+		if value == v {
+			return nil // 匹配到合法值
+		}
+	}
+
+	// 构建可选值提示
+	validStr := ""
+	for i, v := range meta.ValidValues {
+		if i > 0 {
+			validStr += ", "
+		}
+		validStr += v
+	}
+
+	return fmt.Errorf("配置项 %s 的值 %q 无效，可选值: %s", key, value, validStr)
+}
+
 // SetConfigValue 通过点号分隔的 key 设置 Config 中的值。
 func SetConfigValue(config *Config, key, value string) error {
+	// 先校验值是否合法
+	if err := ValidateConfigValue(key, value); err != nil {
+		return err
+	}
+
 	switch key {
 	case "core.version":
 		config.Core.Version = value
