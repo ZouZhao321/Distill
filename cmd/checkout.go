@@ -34,11 +34,12 @@ var checkoutCmd = &cobra.Command{
 			overwrite = "skip"
 		}
 
+		home := resolveStoreHome()
 		manifestStore := store.NewManifestStore(
-			filepath.Join(storeHome, "manifests"),
-			filepath.Join(storeHome, "config", "refs.json"),
+			filepath.Join(home, "manifests"),
+			filepath.Join(home, "config", "refs.json"),
 		)
-		objectStore := store.NewObjectStore(filepath.Join(storeHome, "objects"))
+		objectStore := store.NewObjectStore(filepath.Join(home, "objects"))
 
 		uc := usecase.NewCheckoutUseCase(manifestStore, objectStore)
 		err := uc.Execute(name, outputDir, overwrite)

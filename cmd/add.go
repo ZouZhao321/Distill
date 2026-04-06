@@ -34,10 +34,11 @@ var addCmd = &cobra.Command{
 			name = filepath.Base(source)
 		}
 
-		objectStore := store.NewObjectStore(filepath.Join(storeHome, "objects"))
+		home := resolveStoreHome()
+		objectStore := store.NewObjectStore(filepath.Join(home, "objects"))
 		manifestStore := store.NewManifestStore(
-			filepath.Join(storeHome, "manifests"),
-			filepath.Join(storeHome, "config", "refs.json"),
+			filepath.Join(home, "manifests"),
+			filepath.Join(home, "config", "refs.json"),
 		)
 		uc := usecase.NewAddAssetUseCase(manifestStore, objectStore)
 

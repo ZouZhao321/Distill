@@ -17,10 +17,11 @@ var gcCmd = &cobra.Command{
 	Short: domain.T(domain.MsgCmdGcShort),
 	Long:  domain.T(domain.MsgCmdGcLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		objectStore := store.NewObjectStore(filepath.Join(storeHome, "objects"))
+		home := resolveStoreHome()
+		objectStore := store.NewObjectStore(filepath.Join(home, "objects"))
 		manifestStore := store.NewManifestStore(
-			filepath.Join(storeHome, "manifests"),
-			filepath.Join(storeHome, "config", "refs.json"),
+			filepath.Join(home, "manifests"),
+			filepath.Join(home, "config", "refs.json"),
 		)
 
 		uc := usecase.NewGCUseCase(manifestStore, objectStore)

@@ -19,9 +19,10 @@ var listCmd = &cobra.Command{
 	Short: domain.T(domain.MsgCmdListShort),
 	Long:  domain.T(domain.MsgCmdListLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		home := resolveStoreHome()
 		manifestStore := store.NewManifestStore(
-			filepath.Join(storeHome, "manifests"),
-			filepath.Join(storeHome, "config", "refs.json"),
+			filepath.Join(home, "manifests"),
+			filepath.Join(home, "config", "refs.json"),
 		)
 
 		uc := usecase.NewListAssetsUseCase(manifestStore)

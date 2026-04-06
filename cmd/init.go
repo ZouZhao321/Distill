@@ -17,6 +17,8 @@ var initCmd = &cobra.Command{
 	Short: domain.T(domain.MsgCmdInitShort),
 	Long:  domain.T(domain.MsgCmdInitLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		storeHome := resolveStoreHome()
+
 		dirs := []string{
 			filepath.Join(storeHome, "objects"),
 			filepath.Join(storeHome, "manifests"),
@@ -29,30 +31,14 @@ var initCmd = &cobra.Command{
 			}
 		}
 
-		// 路径使用正斜杠，避免 TOML 解析器将 Windows 反斜杠误读为转义字符
-		home := strings.ReplaceAll(storeHome, "\\", "/")
-		trash := strings.ReplaceAll(trashPath, "\\", "/")
+		// 使用 Config struct 生成配置，确保格式一致
+		config := domain.DefaultConfig()
+		config.Store.Home = strings.ReplaceAll(storeHome, "\\", "/")
+		config.Store.TrashPath = strings.ReplaceAll(trashPath, "\\", "/")
+		config.Lang = resolveLang()
 
-		configContent := `[core]
-    version = "1"
-    objects_format = "plain"
-
-[store]
-    home = "` + home + `"
-    trash_path = "` + trash + `"
-
-[checkout]
-    overwrite = "ask"
-
-[log]
-    format = "text"
-    level = "info"
-
-[normalize]
-    crlf_to_lf = true
-`
 		configPath := filepath.Join(storeHome, "config", "config.toml")
-		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		if err := domain.SaveConfig(config, configPath); err != nil {
 			return fmt.Errorf(domain.T(domain.MsgErrWriteConfigFailed), err)
 		}
 

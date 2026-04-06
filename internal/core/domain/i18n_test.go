@@ -149,5 +149,13 @@ func allKeys() []MsgKey {
 		MsgCmdHelpShort,
 		MsgCmdCompletionShort,
 		MsgFlagHelp,
+		MsgCmdConfigShort,
+		MsgCmdConfigLong,
+		MsgCmdConfigShowShort,
+		MsgCmdConfigShowLong,
+		MsgCmdConfigGetShort,
+		MsgCmdConfigGetLong,
+		MsgCmdConfigSetShort,
+		MsgCmdConfigSetLong,
 	}
 }

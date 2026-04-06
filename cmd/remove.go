@@ -20,9 +20,10 @@ var removeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
+		home := resolveStoreHome()
 		manifestStore := store.NewManifestStore(
-			filepath.Join(storeHome, "manifests"),
-			filepath.Join(storeHome, "config", "refs.json"),
+			filepath.Join(home, "manifests"),
+			filepath.Join(home, "config", "refs.json"),
 		)
 
 		// 检查资产是否存在

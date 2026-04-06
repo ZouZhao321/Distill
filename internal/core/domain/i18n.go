@@ -105,6 +105,16 @@ const (
 	MsgFlagHelp
 	MsgFlagVersion
 
+	// config 命令
+	MsgCmdConfigShort
+	MsgCmdConfigLong
+	MsgCmdConfigShowShort
+	MsgCmdConfigShowLong
+	MsgCmdConfigGetShort
+	MsgCmdConfigGetLong
+	MsgCmdConfigSetShort
+	MsgCmdConfigSetLong
+
 	// cobra 帮助模板
 	MsgHelpTip
 	MsgFlagDefault
@@ -211,6 +221,16 @@ var zh = map[MsgKey]string{
 	MsgFlagHelp:    "显示帮助信息",
 	MsgFlagVersion: "显示版本信息",
 
+	// config 命令
+	MsgCmdConfigShort:     "查看和修改配置",
+	MsgCmdConfigLong:      "管理 Distill 的配置项。配置文件存储在 <home>/config/config.toml。",
+	MsgCmdConfigShowShort: "显示配置",
+	MsgCmdConfigShowLong:  "显示所有配置或指定配置项的值。",
+	MsgCmdConfigGetShort:  "获取配置值",
+	MsgCmdConfigGetLong:   "获取指定配置项的值。",
+	MsgCmdConfigSetShort:  "设置配置值",
+	MsgCmdConfigSetLong:   "设置指定配置项的值并写入配置文件。",
+
 	// cobra 帮助模板
 	MsgHelpTip:     `使用 "distill [命令] --help" 获取更多关于某条命令的信息。`,
 	MsgFlagDefault: "默认",
@@ -307,6 +327,16 @@ var en = map[MsgKey]string{
 	// cobra 内置 flag
 	MsgFlagHelp:    "Show help information",
 	MsgFlagVersion: "Show version information",
+
+	// config 命令
+	MsgCmdConfigShort:     "View and modify configuration",
+	MsgCmdConfigLong:      "Manage Distill configuration settings. Config file is stored at <home>/config/config.toml.",
+	MsgCmdConfigShowShort: "Show configuration",
+	MsgCmdConfigShowLong:  "Display all configuration settings or a specific setting.",
+	MsgCmdConfigGetShort:  "Get configuration value",
+	MsgCmdConfigGetLong:   "Get the value of a specific configuration key.",
+	MsgCmdConfigSetShort:  "Set configuration value",
+	MsgCmdConfigSetLong:   "Set a configuration value and write it to the config file.",
 
 	// cobra 帮助模板
 	MsgHelpTip:     `Use "distill [command] --help" for more information about a command.`,

@@ -1,5 +1,5 @@
 // Package cmd 实现 Distill CLI 的所有命令。
-// 包含 init、add、list、checkout、export、remove、gc 七个子命令。
+// 包含 init、add、list、checkout、export、remove、gc、config 八个子命令。
 package cmd
 
 import (
@@ -17,13 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	storeHome string
-	logFormat string
-	logLevel  string
-	lang      string
-	version   = "v0.1.0-dev" // 默认版本，构建时可通过 -ldflags 覆盖
-)
+var version = "v0.1.0-dev" // 默认版本，构建时可通过 -ldflags 覆盖
 
 var rootCmd = &cobra.Command{
 	Use:     "distill",
@@ -31,8 +25,6 @@ var rootCmd = &cobra.Command{
 	Long:    "distill",
 	Version: version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// cobra 解析完 flag 后，lang 变量已被赋值
-		domain.SetLang(lang)
 		applyLangToCommands(cmd)
 		setupLogger()
 	},
@@ -40,7 +32,7 @@ var rootCmd = &cobra.Command{
 
 // Execute 启动根命令并执行。
 func Execute() {
-	// 预解析 --lang 参数，在 cobra 帮助渲染之前设置语言
+	// 预解析 --lang 以便在 cobra 帮助渲染之前设置语言
 	preParseLang()
 
 	if err := rootCmd.Execute(); err != nil {
@@ -49,18 +41,9 @@ func Execute() {
 	}
 }
 
-// preParseLang 在 cobra 解析前预解析 --lang 参数并应用文案。
+// preParseLang 在 cobra 解析前从配置文件或环境变量中读取语言设置并应用文案。
 func preParseLang() {
-	for i, arg := range os.Args[1:] {
-		if arg == "--lang" && i+1 < len(os.Args[1:]) {
-			lang = os.Args[1:][i+1]
-			break
-		}
-		if len(arg) > 7 && arg[:7] == "--lang=" {
-			lang = arg[7:]
-			break
-		}
-	}
+	lang := resolveLang()
 	domain.SetLang(lang)
 
 	// 强制 cobra 提前注册内置命令（通常在 Execute 时才注册），
@@ -93,6 +76,7 @@ func applyLangToCommands(root *cobra.Command) {
 		initCmd:     domain.MsgCmdInitShort,
 		listCmd:     domain.MsgCmdListShort,
 		removeCmd:   domain.MsgCmdRemoveShort,
+		configCmd:   domain.MsgCmdConfigShort,
 	}
 	longMap := map[*cobra.Command]domain.MsgKey{
 		addCmd:      domain.MsgCmdAddLong,
@@ -102,6 +86,7 @@ func applyLangToCommands(root *cobra.Command) {
 		initCmd:     domain.MsgCmdInitLong,
 		listCmd:     domain.MsgCmdListLong,
 		removeCmd:   domain.MsgCmdRemoveLong,
+		configCmd:   domain.MsgCmdConfigLong,
 	}
 	for cmd, key := range shortMap {
 		cmd.Short = domain.T(key)
@@ -120,26 +105,6 @@ func applyLangToCommands(root *cobra.Command) {
 		}
 	}
 
-	// 更新全局 PersistentFlags 的 help 文本
-	if f := root.PersistentFlags().Lookup("home"); f != nil {
-		f.Usage = domain.T(domain.MsgFlagHome)
-	}
-	if f := root.PersistentFlags().Lookup("log-format"); f != nil {
-		f.Usage = domain.T(domain.MsgFlagLogFormat)
-	}
-	if f := root.PersistentFlags().Lookup("log-level"); f != nil {
-		f.Usage = domain.T(domain.MsgFlagLogLevel)
-	}
-	if f := root.PersistentFlags().Lookup("lang"); f != nil {
-		f.Usage = domain.T(domain.MsgFlagLang)
-	}
-	if f := root.Flags().Lookup("version"); f != nil {
-		f.Usage = domain.T(domain.MsgFlagVersion)
-	}
-
-	// 自定义版本输出模板，支持本地化
-	root.SetVersionTemplate(fmt.Sprintf("%s version {{.Version}}\n", root.Use))
-
 	// 更新各子命令的 LocalFlags help 文本
 	updateFlagHelp(addCmd, "as", domain.MsgFlagAs)
 	updateFlagHelp(checkoutCmd, "output", domain.MsgFlagOutput)
@@ -148,6 +113,13 @@ func applyLangToCommands(root *cobra.Command) {
 	updateFlagHelp(gcCmd, "dry-run", domain.MsgFlagDryRun)
 	updateFlagHelp(initCmd, "trash", domain.MsgFlagTrash)
 	updateFlagHelp(listCmd, "format", domain.MsgFlagFormat)
+
+	// 自定义版本输出模板，支持本地化
+	root.SetVersionTemplate(fmt.Sprintf("%s version {{.Version}}\n", root.Use))
+
+	if f := root.Flags().Lookup("version"); f != nil {
+		f.Usage = domain.T(domain.MsgFlagVersion)
+	}
 
 	// 更新 cobra 内置 -h/--help flag（根命令 + 所有子命令）
 	if f := root.Flags().Lookup("help"); f != nil {
@@ -236,23 +208,6 @@ func i18nUsageFunc(cmd *cobra.Command) error {
 }
 
 func init() {
-	home, _ := os.UserHomeDir()
-	defaultHome := filepath.Join(home, ".distill")
-	rootCmd.PersistentFlags().StringVar(&storeHome, "home", defaultHome, domain.T(domain.MsgFlagHome))
-	rootCmd.PersistentFlags().StringVar(&logFormat, "log-format", "text", domain.T(domain.MsgFlagLogFormat))
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", domain.T(domain.MsgFlagLogLevel))
-	rootCmd.PersistentFlags().StringVar(&lang, "lang", "zh", domain.T(domain.MsgFlagLang))
-
-	// 替换 cobra 内置 help 命令
-	helpCmd := &cobra.Command{
-		Use:   "help [command]",
-		Short: domain.T(domain.MsgCmdHelpShort),
-		Run: func(cmd *cobra.Command, args []string) {
-			rootCmd.Help()
-		},
-	}
-	rootCmd.SetHelpCommand(helpCmd)
-
 	// 提前注册 help flag 以便 applyLangToCommands 能修改其 Usage
 	rootCmd.Flags().BoolP("help", "h", false, domain.T(domain.MsgFlagHelp))
 
@@ -263,30 +218,61 @@ func init() {
 	}
 }
 
-// setupLogger 根据配置文件和 CLI 参数初始化全局 slog 日志。
-// 优先级：CLI flag > config.toml > 默认值。
-// 仓库已初始化时日志只写入文件；未初始化时 fallback 到 stderr。
+// resolveStoreHome 解析仓库路径。
+// 优先级：DISTILL_HOME 环境变量 > 配置文件 > 默认值 ~/.distill
+func resolveStoreHome() string {
+	// 1. 环境变量
+	if home := os.Getenv("DISTILL_HOME"); home != "" {
+		return home
+	}
+
+	// 2. 配置文件
+	home, _ := os.UserHomeDir()
+	defaultHome := filepath.Join(home, ".distill")
+	config, err := domain.LoadConfigByHome(defaultHome)
+	if err == nil && config.Store.Home != "" {
+		return config.Store.Home
+	}
+
+	// 3. 默认值
+	return defaultHome
+}
+
+// resolveLang 解析语言设置。
+// 优先级：DISTILL_LANG 环境变量 > 配置文件 > 默认值 zh
+func resolveLang() string {
+	// 1. 环境变量
+	if lang := os.Getenv("DISTILL_LANG"); lang != "" {
+		return lang
+	}
+
+	// 2. 配置文件
+	home, _ := os.UserHomeDir()
+	defaultHome := filepath.Join(home, ".distill")
+	config, err := domain.LoadConfigByHome(defaultHome)
+	if err == nil && config.Lang != "" {
+		return config.Lang
+	}
+
+	// 3. 默认值
+	return "zh"
+}
+
+// setupLogger 根据配置文件初始化全局 slog 日志。
 func setupLogger() {
-	// 尝试从 config.toml 加载日志配置
+	storeHome := resolveStoreHome()
 	configPath := filepath.Join(storeHome, "config", "config.toml")
 	config, err := domain.LoadConfig(configPath)
 	if err != nil {
 		config = &domain.Config{}
 	}
 
-	// CLI flag 为空时使用配置文件值，配置文件值也为空时使用默认值
-	format := logFormat
-	if format == "" {
-		format = config.Log.Format
-	}
+	format := config.Log.Format
 	if format == "" {
 		format = "text"
 	}
 
-	levelStr := logLevel
-	if levelStr == "" {
-		levelStr = config.Log.Level
-	}
+	levelStr := config.Log.Level
 	if levelStr == "" {
 		levelStr = "info"
 	}
