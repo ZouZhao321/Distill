@@ -1,7 +1,0 @@
-?   	github.com/ZouZhao321/distill	[no test files]
-?   	github.com/ZouZhao321/distill/cmd	[no test files]
-ok  	github.com/ZouZhao321/distill/internal/adapter	30.055s
-?   	github.com/ZouZhao321/distill/internal/core/domain	[no test files]
-?   	github.com/ZouZhao321/distill/internal/core/port	[no test files]
-ok  	github.com/ZouZhao321/distill/internal/core/usecase	1.467s
-ok  	github.com/ZouZhao321/distill/internal/infra/store	1.002s
