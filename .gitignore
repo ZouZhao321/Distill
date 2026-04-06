@@ -19,6 +19,9 @@ test_output.txt
 .DS_Store
 Thumbs.db
 
+# WorkBuddy (AI assistant local data)
+.workbuddy/
+
 # Distill data (user's local store)
 test-distill/
 test-trash/
