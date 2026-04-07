@@ -31,7 +31,7 @@ func NewAddAssetUseCase(repo port.AssetRepository, store port.ObjectStorage) *Ad
 	return &AddAssetUseCase{repo: repo, store: store}
 }
 
-// Execute 导入单个文件：计算哈希、存储对象、创建清单、注册引用。
+// Execute 导入单个文件：规范化 CRLF、计算哈希、存储对象、创建清单、注册引用。
 func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error) {
 	if len(input.Content) == 0 {
 		return nil, domain.ErrEmptySource
@@ -42,9 +42,12 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 		return nil, domain.ErrAlreadyExists
 	}
 
+	// 规范化 CRLF 为 LF，确保与目录/ZIP 导入行为一致
+	content := normalizeCRLF(input.Content)
+
 	// 计算哈希并存储对象
-	hash := computeHash(input.Content)
-	if err := uc.store.Write(hash, input.Content); err != nil {
+	hash := computeHash(content)
+	if err := uc.store.Write(hash, content); err != nil {
 		return nil, err
 	}
 
@@ -55,13 +58,13 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 		OriginalPath: input.Source,
 		CreatedAt:    now,
 		FileCount:    1,
-		TotalSize:    int64(len(input.Content)),
-		StoredSize:   int64(len(input.Content)),
+		TotalSize:    int64(len(content)),
+		StoredSize:   int64(len(content)),
 		Status:       "active",
 		Tree: domain.TreeNode{
 			Name:   input.Name,
 			Type:   "file",
-			Size:   int64(len(input.Content)),
+			Size:   int64(len(content)),
 			Object: hash,
 		},
 	}
@@ -138,4 +141,21 @@ func countTree(node *domain.TreeNode) (int, int64) {
 func computeHash(data []byte) string {
 	h := sha256.Sum256(data)
 	return hex.EncodeToString(h[:])
+}
+
+// normalizeCRLF 将 CRLF 换行替换为 LF。
+// 此函数供单文件导入使用，确保与 DirAdapter/ZipAdapter 的规范化行为一致。
+func normalizeCRLF(data []byte) []byte {
+	var result []byte
+	i := 0
+	for i < len(data) {
+		if i+1 < len(data) && data[i] == '\r' && data[i+1] == '\n' {
+			result = append(result, '\n')
+			i += 2
+		} else {
+			result = append(result, data[i])
+			i++
+		}
+	}
+	return result
 }
