@@ -23,7 +23,8 @@ func NewExportUseCase(repo port.AssetRepository, store port.ObjectStorage) *Expo
 }
 
 // Execute 将指定资产导出为 ZIP 文件并保存到 outputPath。
-func (uc *ExportUseCase) Execute(name, outputPath string) error {
+// overwrite 控制输出文件已存在时的行为："skip"、"force" 或 "ask"。
+func (uc *ExportUseCase) Execute(name, outputPath, overwrite string) error {
 	ref, err := uc.repo.GetRef(name)
 	if err != nil {
 		return err
@@ -32,6 +33,18 @@ func (uc *ExportUseCase) Execute(name, outputPath string) error {
 	manifest, err := uc.repo.GetManifest(ref.Manifest)
 	if err != nil {
 		return err
+	}
+
+	// 检查输出文件是否已存在
+	if _, err := os.Stat(outputPath); err == nil {
+		switch overwrite {
+		case "skip":
+			return nil
+		case "force":
+			// 继续覆盖
+		case "ask":
+			return domain.ErrAlreadyExists
+		}
 	}
 
 	f, err := os.Create(outputPath)

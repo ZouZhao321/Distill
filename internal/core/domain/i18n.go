@@ -123,6 +123,9 @@ const (
 	MsgCheckoutFileExists
 	MsgCheckoutOverwritePrompt
 	MsgCheckoutSkipped
+	MsgExportFileExists
+	MsgExportOverwritePrompt
+	MsgExportSkipped
 	MsgWarnLogOpenFailed
 )
 
@@ -239,6 +242,9 @@ var zh = map[MsgKey]string{
 	MsgCheckoutFileExists:      "文件已存在: %s",
 	MsgCheckoutOverwritePrompt: "是否覆盖？(y/N): ",
 	MsgCheckoutSkipped:         "已跳过。",
+	MsgExportFileExists:        "输出文件已存在: %s",
+	MsgExportOverwritePrompt:   "是否覆盖？(y/N): ",
+	MsgExportSkipped:           "已跳过。",
 	MsgWarnLogOpenFailed:       "警告: 打开日志文件失败: %v\n",
 }
 
@@ -346,6 +352,9 @@ var en = map[MsgKey]string{
 	MsgCheckoutFileExists:      "File already exists: %s",
 	MsgCheckoutOverwritePrompt: "Overwrite? (y/N): ",
 	MsgCheckoutSkipped:         "Skipped.",
+	MsgExportFileExists:        "Output file already exists: %s",
+	MsgExportOverwritePrompt:   "Overwrite? (y/N): ",
+	MsgExportSkipped:           "Skipped.",
 	MsgWarnLogOpenFailed:       "Warning: failed to open log file: %v\n",
 }
 

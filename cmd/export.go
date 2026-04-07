@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
@@ -11,6 +14,7 @@ import (
 )
 
 var exportOutput string
+var exportOverwrite string
 
 var exportCmd = &cobra.Command{
 	Use:   "export <name>",
@@ -25,6 +29,11 @@ var exportCmd = &cobra.Command{
 			outputPath = name + ".zip"
 		}
 
+		overwrite := exportOverwrite
+		if overwrite == "" {
+			overwrite = "skip"
+		}
+
 		home := resolveStoreHome()
 		manifestStore := store.NewManifestStore(
 			filepath.Join(home, "manifests"),
@@ -33,9 +42,27 @@ var exportCmd = &cobra.Command{
 		objectStore := store.NewObjectStore(filepath.Join(home, "objects"))
 
 		uc := usecase.NewExportUseCase(manifestStore, objectStore)
-		err := uc.Execute(name, outputPath)
+		err := uc.Execute(name, outputPath, overwrite)
 		if err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrExportFailed), err)
+			if err == domain.ErrAlreadyExists && overwrite == "ask" {
+				fmt.Printf(domain.T(domain.MsgExportFileExists)+"\n", outputPath)
+				fmt.Print(domain.T(domain.MsgExportOverwritePrompt))
+				reader := bufio.NewReader(os.Stdin)
+				answer, _ := reader.ReadString('\n')
+				answer = strings.TrimSpace(strings.ToLower(answer))
+
+				if answer == "y" || answer == "yes" {
+					err = uc.Execute(name, outputPath, "force")
+					if err != nil {
+						return fmt.Errorf(domain.T(domain.MsgErrExportFailed), err)
+					}
+				} else {
+					fmt.Println(domain.T(domain.MsgExportSkipped))
+					return nil
+				}
+			} else {
+				return fmt.Errorf(domain.T(domain.MsgErrExportFailed), err)
+			}
 		}
 
 		fmt.Printf(domain.T(domain.MsgExported)+"\n", name, outputPath)
@@ -45,6 +72,7 @@ var exportCmd = &cobra.Command{
 
 func init() {
 	exportCmd.Flags().StringVarP(&exportOutput, "output", "o", "", domain.T(domain.MsgFlagOutput))
+	exportCmd.Flags().StringVar(&exportOverwrite, "overwrite", "skip", domain.T(domain.MsgFlagOverwrite))
 	registerHelpFlag(exportCmd)
 	rootCmd.AddCommand(exportCmd)
 }
