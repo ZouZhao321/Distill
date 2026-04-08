@@ -10,7 +10,6 @@ import (
 	"github.com/ZouZhao321/distill/internal/adapter"
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
-	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
 )
 
@@ -34,12 +33,7 @@ var addCmd = &cobra.Command{
 			name = filepath.Base(source)
 		}
 
-		home := resolveStoreHome()
-		objectStore := store.NewObjectStore(filepath.Join(home, "objects"))
-		manifestStore := store.NewManifestStore(
-			filepath.Join(home, "manifests"),
-			filepath.Join(home, "config", "refs.json"),
-		)
+		manifestStore, objectStore := newStores()
 		uc := usecase.NewAddAssetUseCase(manifestStore, objectStore)
 
 		switch {

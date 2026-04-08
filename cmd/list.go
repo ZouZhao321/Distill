@@ -3,12 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"text/tabwriter"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
-	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
 )
 
@@ -19,11 +17,7 @@ var listCmd = &cobra.Command{
 	Short: domain.T(domain.MsgCmdListShort),
 	Long:  domain.T(domain.MsgCmdListLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		home := resolveStoreHome()
-		manifestStore := store.NewManifestStore(
-			filepath.Join(home, "manifests"),
-			filepath.Join(home, "config", "refs.json"),
-		)
+		manifestStore := newManifestStore()
 
 		uc := usecase.NewListAssetsUseCase(manifestStore)
 		items, err := uc.Execute()

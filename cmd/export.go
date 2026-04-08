@@ -4,12 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
-	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
 )
 
@@ -34,12 +32,7 @@ var exportCmd = &cobra.Command{
 			overwrite = "ask"
 		}
 
-		home := resolveStoreHome()
-		manifestStore := store.NewManifestStore(
-			filepath.Join(home, "manifests"),
-			filepath.Join(home, "config", "refs.json"),
-		)
-		objectStore := store.NewObjectStore(filepath.Join(home, "objects"))
+		manifestStore, objectStore := newStores()
 
 		uc := usecase.NewExportUseCase(manifestStore, objectStore)
 		err := uc.Execute(name, outputPath, overwrite)

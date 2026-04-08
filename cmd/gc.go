@@ -2,11 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
-	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
 )
 
@@ -17,12 +15,7 @@ var gcCmd = &cobra.Command{
 	Short: domain.T(domain.MsgCmdGcShort),
 	Long:  domain.T(domain.MsgCmdGcLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		home := resolveStoreHome()
-		objectStore := store.NewObjectStore(filepath.Join(home, "objects"))
-		manifestStore := store.NewManifestStore(
-			filepath.Join(home, "manifests"),
-			filepath.Join(home, "config", "refs.json"),
-		)
+		manifestStore, objectStore := newStores()
 
 		uc := usecase.NewGCUseCase(manifestStore, objectStore)
 

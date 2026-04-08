@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
+	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
 )
 
@@ -316,6 +317,34 @@ func openLogFile(logDir string) (*os.File, error) {
 		return nil, err
 	}
 	return f, nil
+}
+
+// Store 目录名称常量，集中定义避免散落在各命令中。
+const (
+	storeDirObjects   = "objects"
+	storeDirManifests = "manifests"
+	storeFileRefs     = "config/refs.json"
+)
+
+// newStores 创建并返回 ManifestStore 和 ObjectStore 实例。
+// 用于 add、checkout、export、gc 等需要两种 store 的命令。
+// 返回顺序与 use case 构造函数一致：(manifestStore, objectStore)。
+func newStores() (*store.ManifestStore, *store.ObjectStore) {
+	home := resolveStoreHome()
+	return store.NewManifestStore(
+		filepath.Join(home, storeDirManifests),
+		filepath.Join(home, storeFileRefs),
+	), store.NewObjectStore(filepath.Join(home, storeDirObjects))
+}
+
+// newManifestStore 创建并返回 ManifestStore 实例。
+// 用于 list、remove 等只需要清单 store 的命令。
+func newManifestStore() *store.ManifestStore {
+	home := resolveStoreHome()
+	return store.NewManifestStore(
+		filepath.Join(home, storeDirManifests),
+		filepath.Join(home, storeFileRefs),
+	)
 }
 
 // parseLogLevel 将字符串日志级别转换为 slog.Level。

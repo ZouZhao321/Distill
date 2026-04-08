@@ -8,7 +8,6 @@ import (
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/usecase"
-	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
 )
 
@@ -20,11 +19,7 @@ var removeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
-		home := resolveStoreHome()
-		manifestStore := store.NewManifestStore(
-			filepath.Join(home, "manifests"),
-			filepath.Join(home, "config", "refs.json"),
-		)
+		manifestStore := newManifestStore()
 
 		// 检查资产是否存在
 		ref, err := manifestStore.GetRef(name)
