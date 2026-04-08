@@ -5,6 +5,7 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -111,7 +112,13 @@ func (s *ManifestStore) loadRefs() (map[string]string, error) {
 		}
 		return nil, err
 	}
-	json.Unmarshal(data, &refs)
+	// 空文件视为空映射（等同于 {}）
+	if len(data) == 0 {
+		return refs, nil
+	}
+	if err := json.Unmarshal(data, &refs); err != nil {
+		return nil, fmt.Errorf("failed to parse %s: %w", s.refsPath, err)
+	}
 	return refs, nil
 }
 

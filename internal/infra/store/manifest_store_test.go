@@ -246,5 +246,54 @@ func TestManifestStore_GetRefNameByHash_NotFound(t *testing.T) {
 	}
 }
 
+func TestManifestStore_loadRefs_InvalidJSON(t *testing.T) {
+	store, dir := setupManifestStore(t)
+
+	// 写入损坏的 JSON 内容
+	invalidJSON := []byte(`{"name": "test", invalid}`)
+	if err := os.WriteFile(filepath.Join(dir, "refs.json"), invalidJSON, 0644); err != nil {
+		t.Fatalf("failed to write invalid refs.json: %v", err)
+	}
+
+	// 使用反射或通过 GetRef 间接测试 loadRefs
+	// 由于 loadRefs 是私有方法，通过调用公开方法来验证
+	_, err := store.ListRefs()
+	if err == nil {
+		t.Error("ListRefs should return error when refs.json contains invalid JSON")
+	}
+}
+
+func TestManifestStore_loadRefs_EmptyFile(t *testing.T) {
+	store, dir := setupManifestStore(t)
+
+	// 写入空文件
+	if err := os.WriteFile(filepath.Join(dir, "refs.json"), []byte{}, 0644); err != nil {
+		t.Fatalf("failed to write empty refs.json: %v", err)
+	}
+
+	refs, err := store.ListRefs()
+	if err != nil {
+		t.Errorf("empty file should be treated as empty refs, got error: %v", err)
+	}
+	if len(refs) != 0 {
+		t.Errorf("ListRefs on empty file returned %d items, want 0", len(refs))
+	}
+}
+
+func TestManifestStore_loadRefs_TruncatedJSON(t *testing.T) {
+	store, dir := setupManifestStore(t)
+
+	// 写入被截断的 JSON
+	truncatedJSON := []byte(`{"name": "test"`)
+	if err := os.WriteFile(filepath.Join(dir, "refs.json"), truncatedJSON, 0644); err != nil {
+		t.Fatalf("failed to write truncated refs.json: %v", err)
+	}
+
+	_, err := store.ListRefs()
+	if err == nil {
+		t.Error("ListRefs should return error when refs.json contains truncated JSON")
+	}
+}
+
 // ManifestStore must implement port.AssetRepository
 var _ port.AssetRepository = (*ManifestStore)(nil)
