@@ -28,18 +28,18 @@ var configShowCmd = &cobra.Command{
 		}
 
 		if len(args) == 0 {
-			// 显示所有配置
-			printAllConfig(config)
+			// 显示所有配置（含说明和可选值）
+			fmt.Println(domain.FormatAllConfig(config))
 			return nil
 		}
 
-		// 显示单个配置项
+		// 显示单个配置项（含说明和可选值）
 		key := args[0]
 		value, err := domain.GetConfigValue(config, key)
 		if err != nil {
 			return err
 		}
-		fmt.Println(value)
+		fmt.Println(domain.FormatConfigItem(key, value))
 		return nil
 	},
 }
@@ -61,7 +61,7 @@ var configGetCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Println(value)
+		fmt.Println(domain.FormatConfigItem(args[0], value))
 		return nil
 	},
 }
@@ -120,12 +120,4 @@ func loadAppConfig() (*domain.Config, error) {
 		return domain.DefaultConfig(), nil
 	}
 	return config, nil
-}
-
-// printAllConfig 以 key=value 格式打印所有配置项。
-func printAllConfig(config *domain.Config) {
-	for _, key := range domain.AllConfigKeys() {
-		value, _ := domain.GetConfigValue(config, key)
-		fmt.Printf("%s=%s\n", key, value)
-	}
 }

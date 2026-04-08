@@ -280,3 +280,56 @@ func AllConfigKeys() []string {
 		"lang",
 	}
 }
+
+// FormatConfigItem 格式化单个配置项的输出，包含值、可选值和说明。
+// 输出格式：
+//
+//	key=value [valid1, valid2, ...]
+//	  description
+//
+// 如果没有可选值（路径类配置），则不显示可选值部分。
+// 如果 key 未知，只输出 key=value。
+func FormatConfigItem(key, value string) string {
+	var sb strings.Builder
+
+	// 第一行：key=value，如有可选值则追加
+	sb.WriteString(key)
+	sb.WriteByte('=')
+	sb.WriteString(value)
+
+	if meta, ok := ConfigMetaMap[key]; ok {
+		if len(meta.ValidValues) > 0 {
+			sb.WriteString(" [")
+			for i, v := range meta.ValidValues {
+				if i > 0 {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(v)
+			}
+			sb.WriteByte(']')
+		}
+	}
+
+	// 第二行：说明（缩进两个空格）
+	if meta, ok := ConfigMetaMap[key]; ok && meta.Description != "" {
+		sb.WriteByte('\n')
+		sb.WriteString("  ")
+		sb.WriteString(meta.Description)
+	}
+
+	return sb.String()
+}
+
+// FormatAllConfig 格式化所有配置项的输出，每个配置项之间用空行分隔。
+func FormatAllConfig(config *Config) string {
+	var sb strings.Builder
+	keys := AllConfigKeys()
+	for i, key := range keys {
+		value, _ := GetConfigValue(config, key)
+		sb.WriteString(FormatConfigItem(key, value))
+		if i < len(keys)-1 {
+			sb.WriteString("\n\n")
+		}
+	}
+	return sb.String()
+}
