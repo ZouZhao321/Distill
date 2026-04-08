@@ -2,6 +2,9 @@ package usecase
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
 )
@@ -9,34 +12,66 @@ import (
 // ErrAlreadyInitialized 表示仓库已经初始化过。
 var ErrAlreadyInitialized = errors.New("repository already initialized")
 
-// InitUseCase 负责仓库初始化。
-// 它生成默认配置，不依赖外部资源。
-type InitUseCase struct {
-	initialized bool
+// InitInput 保存 InitUseCase.Execute() 所需的输入参数。
+type InitInput struct {
+	StoreHome string // 仓库根目录
+	TrashPath string // 回收站路径
+	Lang      string // 界面语言 ("zh" | "en")
 }
+
+// InitUseCase 负责仓库初始化。
+// 创建目录结构、生成默认配置、写入 config.toml 和 refs.json。
+type InitUseCase struct{}
 
 // NewInitUseCase 创建新的 InitUseCase 实例。
 func NewInitUseCase() *InitUseCase {
 	return &InitUseCase{}
 }
 
-// Execute 使用给定的仓库路径和回收站路径创建默认配置。
-// 如果已初始化过，返回 ErrAlreadyInitialized。
-func (uc *InitUseCase) Execute(homePath, trashPath string) (*domain.Config, error) {
-	if uc.initialized {
+// Execute 使用给定的输入参数初始化仓库。
+// 如果 config.toml 已存在，返回 ErrAlreadyInitialized。
+func (uc *InitUseCase) Execute(input InitInput) (*domain.Config, error) {
+	storeHome := input.StoreHome
+	trashPath := input.TrashPath
+	lang := input.Lang
+
+	// 幂等性检查：检测 config.toml 是否已存在（文件系统级检查）
+	configPath := filepath.Join(storeHome, "config", "config.toml")
+	if _, err := os.Stat(configPath); err == nil {
 		return nil, ErrAlreadyInitialized
 	}
 
-	config := &domain.Config{}
-	config.Core.Version = "1"
-	config.Core.ObjectsFormat = "plain"
-	config.Store.Home = homePath
-	config.Store.TrashPath = trashPath
-	config.Checkout.Overwrite = "ask"
-	config.Log.Format = "text"
-	config.Log.Level = "info"
-	config.Normalize.CRLFToLF = true
+	// 创建目录结构
+	dirs := []string{
+		filepath.Join(storeHome, "objects"),
+		filepath.Join(storeHome, "manifests"),
+		filepath.Join(storeHome, "config"),
+		filepath.Join(storeHome, "log"),
+	}
+	for _, d := range dirs {
+		if err := os.MkdirAll(d, 0755); err != nil {
+			return nil, err
+		}
+	}
 
-	uc.initialized = true
+	// 使用 domain.DefaultConfig() 作为基础，覆盖用户指定的字段
+	config := domain.DefaultConfig()
+	config.Store.Home = strings.ReplaceAll(storeHome, "\\", "/")
+	config.Store.TrashPath = strings.ReplaceAll(trashPath, "\\", "/")
+	if lang != "" {
+		config.Lang = lang
+	}
+
+	// 写入 config.toml
+	if err := domain.SaveConfig(config, configPath); err != nil {
+		return nil, err
+	}
+
+	// 写入空的 refs.json
+	refsPath := filepath.Join(storeHome, "config", "refs.json")
+	if err := os.WriteFile(refsPath, []byte("{}\n"), 0644); err != nil {
+		return nil, err
+	}
+
 	return config, nil
 }
