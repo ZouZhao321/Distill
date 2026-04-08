@@ -44,7 +44,7 @@ func TestExport_Execute_CreatesValidZip(t *testing.T) {
 
 	outputPath := tempZipPath(t)
 	uc := NewExportUseCase(repo, store)
-	err := uc.Execute("export-test.txt", outputPath, "skip")
+	err := uc.Execute("export-test.txt", outputPath, "force")
 	if err != nil {
 		t.Fatalf("Export failed: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestExport_Execute_NotFound(t *testing.T) {
 	store := newMockObjectStorage()
 
 	uc := NewExportUseCase(repo, store)
-	err := uc.Execute("nonexistent", tempZipPath(t), "skip")
+	err := uc.Execute("nonexistent", filepath.Join(t.TempDir(), "out.zip"), "force")
 	if err != domain.ErrNotFound {
 		t.Errorf("expected ErrNotFound, got %v", err)
 	}
@@ -111,7 +111,7 @@ func TestExport_Execute_DirectoryTree(t *testing.T) {
 
 	outputPath := tempZipPath(t)
 	uc := NewExportUseCase(repo, store)
-	uc.Execute("my-dir", outputPath, "skip")
+	uc.Execute("my-dir", outputPath, "force")
 
 	r, _ := zip.OpenReader(outputPath)
 	defer r.Close()

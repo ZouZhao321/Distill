@@ -31,7 +31,7 @@ var exportCmd = &cobra.Command{
 
 		overwrite := exportOverwrite
 		if overwrite == "" {
-			overwrite = "skip"
+			overwrite = "ask"
 		}
 
 		home := resolveStoreHome()
@@ -72,7 +72,7 @@ var exportCmd = &cobra.Command{
 
 func init() {
 	exportCmd.Flags().StringVarP(&exportOutput, "output", "o", "", domain.T(domain.MsgFlagOutput))
-	exportCmd.Flags().StringVar(&exportOverwrite, "overwrite", "skip", domain.T(domain.MsgFlagOverwrite))
+	exportCmd.Flags().StringVar(&exportOverwrite, "overwrite", "ask", domain.T(domain.MsgFlagOverwrite))
 	registerHelpFlag(exportCmd)
 	rootCmd.AddCommand(exportCmd)
 }
