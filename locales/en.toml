@@ -1,0 +1,50 @@
+# Distill CLI English translations
+# go-i18n TOML format
+
+[MsgRootShort]
+description = "Root command short description"
+other = "Distill - Asset Management CLI"
+
+[MsgRootLong]
+description = "Root command long description"
+other = "Distill is a Go CLI tool for importing, managing, and exporting assets. Uses content-addressed storage for physical deduplication."
+
+[MsgFlagDefault]
+description = "Default label in help template"
+other = "default"
+
+[MsgFlagHelp]
+description = "Help flag description"
+other = "Show help information"
+
+[MsgFlagVersion]
+description = "Version flag description"
+other = "Show version information"
+
+[MsgCmdHelpShort]
+description = "help command short description"
+other = "Help about any command"
+
+[MsgCmdCompletionShort]
+description = "completion command short description"
+other = "Generate the autocompletion script for the specified shell"
+
+[MsgCmdAddShort]
+description = "add command short description"
+other = "Add asset to repository"
+
+[MsgAdded]
+description = "Asset added success message"
+other = "Added: %s (%d files, %d bytes)"
+
+[MsgListEmpty]
+description = "Empty repository hint"
+other = "Repository is empty. Use \"distill add\" to add assets"
+
+[MsgErrAssetNotFound]
+description = "Asset not found error"
+other = "Asset %q not found"
+
+[MsgCmdInitShort]
+description = "init command short description"
+other = "Initialize Distill repository"

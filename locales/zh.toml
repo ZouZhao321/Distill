@@ -1,0 +1,50 @@
+# Distill CLI 中文翻译
+# go-i18n TOML 格式
+
+[MsgRootShort]
+description = "根命令简短描述"
+other = "Distill - 资产管理 CLI 工具"
+
+[MsgRootLong]
+description = "根命令详细描述"
+other = "Distill 是一个 Go 语言 CLI 工具，用于资产的导入、管理和导出。基于内容寻址存储实现物理级去重。"
+
+[MsgFlagDefault]
+description = "帮助模板中的默认值标签"
+other = "默认"
+
+[MsgFlagHelp]
+description = "帮助 flag 描述"
+other = "显示帮助信息"
+
+[MsgFlagVersion]
+description = "版本 flag 描述"
+other = "显示版本信息"
+
+[MsgCmdHelpShort]
+description = "help 命令简短描述"
+other = "查看命令帮助"
+
+[MsgCmdCompletionShort]
+description = "completion 命令简短描述"
+other = "生成自动补全脚本"
+
+[MsgCmdAddShort]
+description = "add 命令简短描述"
+other = "添加资产到仓库"
+
+[MsgAdded]
+description = "添加资产成功提示"
+other = "已添加: %s (%d 文件, %d bytes)"
+
+[MsgListEmpty]
+description = "仓库为空时的提示"
+other = "仓库为空，使用 distill add 添加资产"
+
+[MsgErrAssetNotFound]
+description = "资产不存在错误"
+other = "资产 %q 不存在"
+
+[MsgCmdInitShort]
+description = "init 命令简短描述"
+other = "初始化 Distill 仓库"

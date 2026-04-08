@@ -1,8 +1,16 @@
 package domain
 
 import (
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	// 确保所有测试开始时 Bundle 处于干净状态
+	resetBundle()
+	code := m.Run()
+	os.Exit(code)
+}
 
 func TestSetLang_ValidLang(t *testing.T) {
 	tests := []struct {
@@ -32,6 +40,9 @@ func TestSetLang_InvalidLang_DefaultsToZh(t *testing.T) {
 }
 
 func TestT(t *testing.T) {
+	resetBundle()
+	defer resetBundle()
+
 	SetLang("zh")
 	if got := T(MsgRootShort); got != "Distill - 资产管理 CLI 工具" {
 		t.Errorf("T(MsgRootShort) zh = %q, want %q", got, "Distill - 资产管理 CLI 工具")
@@ -44,6 +55,9 @@ func TestT(t *testing.T) {
 }
 
 func TestT_AllKeysHaveTranslations(t *testing.T) {
+	resetBundle()
+	defer resetBundle()
+
 	// 确保中英文对每个 key 都有翻译
 	SetLang("zh")
 	for _, key := range allKeys() {
@@ -60,6 +74,8 @@ func TestT_AllKeysHaveTranslations(t *testing.T) {
 }
 
 func TestT_WithFormatArgs(t *testing.T) {
+	resetBundle()
+	defer resetBundle()
 	SetLang("zh")
 	got := T(MsgAdded, "test.zip", 3, 1024)
 	want := "已添加: test.zip (3 文件, 1024 bytes)"

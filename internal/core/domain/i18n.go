@@ -138,6 +138,33 @@ func init() {
 	currentLang = LangZh // 默认中文
 }
 
+// msgKeyID 将 MsgKey 映射到 go-i18n 的字符串 ID。
+// 只有已迁移到 TOML 的 key 才有映射，未迁移的返回空字符串。
+var msgKeyID = map[MsgKey]string{
+	MsgRootShort:          "MsgRootShort",
+	MsgRootLong:           "MsgRootLong",
+	MsgFlagDefault:        "MsgFlagDefault",
+	MsgFlagHelp:           "MsgFlagHelp",
+	MsgFlagVersion:        "MsgFlagVersion",
+	MsgCmdHelpShort:       "MsgCmdHelpShort",
+	MsgCmdCompletionShort: "MsgCmdCompletionShort",
+	MsgCmdAddShort:        "MsgCmdAddShort",
+	MsgAdded:              "MsgAdded",
+	MsgListEmpty:          "MsgListEmpty",
+	MsgErrAssetNotFound:   "MsgErrAssetNotFound",
+	MsgCmdInitShort:       "MsgCmdInitShort",
+}
+
+// langTag 将 Lang 转换为 go-i18n 的语言标签字符串。
+func langTag(l Lang) string {
+	switch l {
+	case LangEn:
+		return "en"
+	default:
+		return "zh"
+	}
+}
+
 // zh 翻译表。
 var zh = map[MsgKey]string{
 	// 根命令
@@ -386,11 +413,26 @@ func ResetLang() {
 }
 
 // T 根据当前语言返回对应文案，支持 fmt.Sprintf 格式化参数。
+// 优先从 go-i18n Bundle 查找，找不到则 fallback 到旧 map。
 func T(key MsgKey, args ...any) string {
 	langMu.RLock()
 	l := currentLang
 	langMu.RUnlock()
 
+	// 优先从 go-i18n Bundle 查找
+	if b := getBundle(); b != nil {
+		if id, ok := msgKeyID[key]; ok {
+			text, err := b.Localize(langTag(l), id, nil)
+			if err == nil && text != "" {
+				if len(args) > 0 {
+					return fmt.Sprintf(text, args...)
+				}
+				return text
+			}
+		}
+	}
+
+	// Fallback 到旧 map
 	var text string
 	switch l {
 	case LangEn:

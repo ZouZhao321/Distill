@@ -1,7 +1,15 @@
 package main
 
-import "github.com/ZouZhao321/distill/cmd"
+import (
+	"embed"
+
+	"github.com/ZouZhao321/distill/cmd"
+)
+
+//go:embed locales/*
+var localesFS embed.FS
 
 func main() {
+	cmd.SetLocalesFS(localesFS)
 	cmd.Execute()
 }

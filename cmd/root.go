@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -17,6 +18,10 @@ import (
 	"github.com/ZouZhao321/distill/internal/infra/store"
 	"github.com/spf13/cobra"
 )
+
+// localesFS 是由 main 包通过 SetLocalesFS 设置的 embed.FS。
+// 用于 go-i18n 从打包的二进制中加载翻译文件。
+var localesFS fs.FS
 
 var version = "v0.1.0-dev" // 默认版本，构建时可通过 -ldflags 覆盖
 
@@ -44,6 +49,13 @@ func Execute() {
 
 // preParseLang 在 cobra 解析前从配置文件或环境变量中读取语言设置并应用文案。
 func preParseLang() {
+	// 初始化 go-i18n Bundle（如果提供了 localesFS）
+	if localesFS != nil {
+		if sub, err := fs.Sub(localesFS, "locales"); err == nil {
+			_ = domain.InitBundleFromFS(sub)
+		}
+	}
+
 	lang := resolveLang()
 	domain.SetLang(lang)
 
@@ -359,4 +371,11 @@ func parseLogLevel(level string) slog.Level {
 	default:
 		return slog.LevelInfo
 	}
+}
+
+// SetLocalesFS 设置翻译文件的 embed.FS。
+// 必须在 Execute() 之前调用。
+// fsys 应包含 "locales/" 子目录，内有 zh.toml 和 en.toml。
+func SetLocalesFS(fsys fs.FS) {
+	localesFS = fsys
 }
