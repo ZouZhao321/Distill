@@ -163,6 +163,63 @@ func TestNormalizeCRLF_Empty(t *testing.T) {
 	}
 }
 
+// Issue #26: 边界条件测试，确保重构为 bytes.ReplaceAll 后行为一致
+func TestNormalizeCRLF_NoCRLF(t *testing.T) {
+	input := []byte("hello world")
+	got := NormalizeCRLF(input)
+	if string(got) != "hello world" {
+		t.Errorf("no CRLF should be unchanged, got %q", string(got))
+	}
+}
+
+func TestNormalizeCRLF_OnlyCRLF(t *testing.T) {
+	input := []byte("\r\n")
+	got := NormalizeCRLF(input)
+	if string(got) != "\n" {
+		t.Errorf("single CRLF should become LF, got %q", string(got))
+	}
+}
+
+func TestNormalizeCRLF_MultipleConsecutiveCRLF(t *testing.T) {
+	input := []byte("a\r\n\r\nb")
+	got := NormalizeCRLF(input)
+	expected := "a\n\nb"
+	if string(got) != expected {
+		t.Errorf("consecutive CRLF should each become LF, got %q, want %q", string(got), expected)
+	}
+}
+
+func TestNormalizeCRLF_OnlyCR(t *testing.T) {
+	// 单独的 CR（非 CRLF）不应被修改
+	input := []byte("line1\rline2")
+	got := NormalizeCRLF(input)
+	if string(got) != "line1\rline2" {
+		t.Errorf("bare CR should not be modified, got %q", string(got))
+	}
+}
+
+func TestNormalizeCRLF_MixedLineEndings(t *testing.T) {
+	input := []byte("a\nb\r\nc\rd\r\n")
+	got := NormalizeCRLF(input)
+	expected := "a\nb\nc\rd\n"
+	if string(got) != expected {
+		t.Errorf("mixed line endings: got %q, want %q", string(got), expected)
+	}
+}
+
+func TestNormalizeCRLF_LargeFile(t *testing.T) {
+	// 模拟大文件：1000 行 CRLF
+	lines := make([]byte, 0, 5000)
+	for i := 0; i < 1000; i++ {
+		lines = append(lines, "line\r\n"...)
+	}
+	got := NormalizeCRLF(lines)
+	// 每行 6 字节 → 5 字节，1000 行 = 5000 字节
+	if len(got) != 5000 {
+		t.Errorf("large file: got %d bytes, want 5000", len(got))
+	}
+}
+
 // --- mock test store ---
 
 type mockTestStore struct {

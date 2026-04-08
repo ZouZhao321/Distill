@@ -2,6 +2,7 @@
 package adapter
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"log/slog"
@@ -103,46 +104,5 @@ func (a *DirAdapter) buildTree(name, path string) (*domain.TreeNode, error) {
 
 // NormalizeCRLF 将 CRLF 换行替换为 LF。
 func NormalizeCRLF(data []byte) []byte {
-	return bytesReplaceAll(data, []byte("\r\n"), []byte("\n"))
-}
-
-// bytesReplaceAll 将 s 中所有 old 替换为 new。
-func bytesReplaceAll(s, old, new []byte) []byte {
-	if len(old) == 0 {
-		return s
-	}
-	var result []byte
-	for {
-		idx := bytesIndexOf(s, old)
-		if idx < 0 {
-			result = append(result, s...)
-			return result
-		}
-		result = append(result, s[:idx]...)
-		result = append(result, new...)
-		s = s[idx+len(old):]
-	}
-}
-
-// bytesIndexOf 返回 sep 在 s 中首次出现的位置，未找到返回 -1。
-func bytesIndexOf(s, sep []byte) int {
-	for i := 0; i+len(sep) <= len(s); i++ {
-		if bytesEqual(s[i:i+len(sep)], sep) {
-			return i
-		}
-	}
-	return -1
-}
-
-// bytesEqual 比较两个字节切片是否相等。
-func bytesEqual(a, b []byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
+	return bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
 }
