@@ -65,7 +65,7 @@ func backupToTrash(manifest *domain.Manifest, trashPath string) error {
 		return err
 	}
 
-	trashFile := filepath.Join(trashPath, manifest.Hash+"manifest.json")
+	trashFile := filepath.Join(trashPath, manifest.Hash+"-manifest.json")
 	return os.WriteFile(trashFile, data, 0644)
 }
 
