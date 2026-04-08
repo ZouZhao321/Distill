@@ -18,11 +18,10 @@ var listCmd = &cobra.Command{
 	Long:  domain.T(domain.MsgCmdListLong),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		manifestStore := newManifestStore()
-
 		uc := usecase.NewListAssetsUseCase(manifestStore)
 		items, err := uc.Execute()
 		if err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrListFailed), err)
+			return fmt.Errorf("%s: %w", domain.T(domain.MsgErrListFailed), err)
 		}
 
 		if len(items) == 0 {

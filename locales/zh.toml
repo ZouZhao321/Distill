@@ -1,6 +1,10 @@
 # Distill CLI 中文翻译
 # go-i18n TOML 格式
 
+# ============================================================
+# 根命令
+# ============================================================
+
 [MsgRootShort]
 description = "根命令简短描述"
 other = "Distill - 资产管理 CLI 工具"
@@ -9,17 +13,281 @@ other = "Distill - 资产管理 CLI 工具"
 description = "根命令详细描述"
 other = "Distill 是一个 Go 语言 CLI 工具，用于资产的导入、管理和导出。基于内容寻址存储实现物理级去重。"
 
-[MsgFlagDefault]
-description = "帮助模板中的默认值标签"
-other = "默认"
+[MsgFlagHome]
+description = "仓库路径 flag 描述"
+other = "仓库路径"
 
-[MsgFlagHelp]
-description = "帮助 flag 描述"
-other = "显示帮助信息"
+[MsgFlagLogFormat]
+description = "日志格式 flag 描述"
+other = "日志格式 (text|json)"
 
-[MsgFlagVersion]
-description = "版本 flag 描述"
-other = "显示版本信息"
+[MsgFlagLogLevel]
+description = "日志级别 flag 描述"
+other = "日志级别 (debug|info|warn|error)"
+
+[MsgFlagLang]
+description = "界面语言 flag 描述"
+other = "界面语言 (zh|en)"
+
+# ============================================================
+# add 命令
+# ============================================================
+
+[MsgCmdAddShort]
+description = "add 命令简短描述"
+other = "添加资产到仓库"
+
+[MsgCmdAddLong]
+description = "add 命令详细描述"
+other = "将文件、文件夹或 ZIP 包添加到 Distill 仓库。基于 SHA-256 内容寻址，相同内容只存储一份。"
+
+[MsgFlagAs]
+description = "指定资产名称 flag 描述"
+other = "指定资产名称"
+
+[MsgAdded]
+description = "添加资产成功提示"
+other = "已添加: {{.Name}} ({{.FileCount}} 文件, {{.TotalSize}} bytes)"
+
+# ============================================================
+# checkout 命令
+# ============================================================
+
+[MsgCmdCheckoutShort]
+description = "checkout 命令简短描述"
+other = "从仓库还原资产到目录"
+
+[MsgCmdCheckoutLong]
+description = "checkout 命令详细描述"
+other = "将指定资产从仓库还原到目标目录，保留原始目录结构。"
+
+[MsgFlagOutput]
+description = "输出目录 flag 描述"
+other = "输出目录路径"
+
+[MsgFlagOverwrite]
+description = "覆盖策略 flag 描述"
+other = "覆盖策略 (skip|force|ask)"
+
+[MsgCheckedOut]
+description = "还原成功提示"
+other = "已还原: {{.Name}} -> {{.Output}}"
+
+[MsgCheckoutFileExists]
+description = "文件已存在提示"
+other = "文件已存在: {{.Path}}"
+
+[MsgCheckoutOverwritePrompt]
+description = "覆盖确认提示"
+other = "是否覆盖？(y/N): "
+
+[MsgCheckoutSkipped]
+description = "跳过还原提示"
+other = "已跳过。"
+
+# ============================================================
+# export 命令
+# ============================================================
+
+[MsgCmdExportShort]
+description = "export 命令简短描述"
+other = "导出资产为 ZIP 压缩包"
+
+[MsgCmdExportLong]
+description = "export 命令详细描述"
+other = "将指定资产从仓库打包导出为 ZIP 文件。"
+
+[MsgExported]
+description = "导出成功提示"
+other = "已导出: {{.Name}} -> {{.Output}}"
+
+[MsgExportFileExists]
+description = "输出文件已存在提示"
+other = "输出文件已存在: {{.Path}}"
+
+[MsgExportOverwritePrompt]
+description = "覆盖确认提示"
+other = "是否覆盖？(y/N): "
+
+[MsgExportSkipped]
+description = "跳过导出提示"
+other = "已跳过。"
+
+# ============================================================
+# gc 命令
+# ============================================================
+
+[MsgCmdGcShort]
+description = "gc 命令简短描述"
+other = "垃圾回收"
+
+[MsgCmdGcLong]
+description = "gc 命令详细描述"
+other = "清理未被任何清单引用的孤立对象，释放磁盘空间。"
+
+[MsgFlagDryRun]
+description = "仅列出不删除 flag 描述"
+other = "仅列出孤立对象，不删除"
+
+[MsgGcNoOrphans]
+description = "无孤立对象提示"
+other = "没有发现孤立对象。"
+
+[MsgGcOrphanList]
+description = "孤立对象列表提示"
+other = "发现 {{.Count}} 个孤立对象:"
+
+[MsgGcClean]
+description = "清理完成提示"
+other = "已清理 {{.Count}} 个孤立对象。"
+
+[MsgGcAlreadyClean]
+description = "仓库已干净提示"
+other = "仓库已是干净状态，无需清理。"
+
+# ============================================================
+# init 命令
+# ============================================================
+
+[MsgCmdInitShort]
+description = "init 命令简短描述"
+other = "初始化 Distill 仓库"
+
+[MsgCmdInitLong]
+description = "init 命令详细描述"
+other = "在指定路径创建 Distill 仓库目录结构、默认配置文件和空的引用索引。"
+
+[MsgFlagTrash]
+description = "回收站路径 flag 描述"
+other = "回收站路径"
+
+[MsgInited]
+description = "初始化完成提示"
+other = "Distill 仓库初始化完成: {{.Path}}"
+
+[MsgTrashPath]
+description = "回收站路径提示"
+other = "回收站路径: {{.Path}}"
+
+# ============================================================
+# list 命令
+# ============================================================
+
+[MsgCmdListShort]
+description = "list 命令简短描述"
+other = "列出所有资产"
+
+[MsgCmdListLong]
+description = "list 命令详细描述"
+other = "显示仓库中所有已导入的资产列表。"
+
+[MsgFlagFormat]
+description = "输出格式 flag 描述"
+other = "输出格式 (table|json)"
+
+[MsgListEmpty]
+description = "仓库为空时的提示"
+other = "仓库为空，使用 distill add 添加资产"
+
+# ============================================================
+# remove 命令
+# ============================================================
+
+[MsgCmdRemoveShort]
+description = "remove 命令简短描述"
+other = "移除资产"
+
+[MsgCmdRemoveLong]
+description = "remove 命令详细描述"
+other = "从仓库中移除指定名称的资产。清单和引用将被删除，对象数据保留，等待 GC 清理。"
+
+[MsgRemoved]
+description = "移除成功提示"
+other = "已移除: {{.Name}}"
+
+# ============================================================
+# 错误信息
+# ============================================================
+
+[MsgErrCannotAccess]
+description = "无法访问路径错误"
+other = "无法访问 {{.Path}}"
+
+[MsgErrNotRegularFile]
+description = "非普通文件错误"
+other = "{{.Path}} 不是普通文件、目录或 ZIP"
+
+[MsgErrCannotOpen]
+description = "无法打开文件错误"
+other = "无法打开 {{.Path}}"
+
+[MsgErrReadFailed]
+description = "读取失败错误"
+other = "读取 {{.Path}} 失败"
+
+[MsgErrAddFailed]
+description = "添加失败错误"
+other = "添加失败"
+
+[MsgErrReadZipFailed]
+description = "读取 ZIP 失败错误"
+other = "读取 ZIP 失败"
+
+[MsgErrReadDirFailed]
+description = "读取目录失败错误"
+other = "读取目录失败"
+
+[MsgErrCheckoutFailed]
+description = "还原失败错误"
+other = "还原失败"
+
+[MsgErrExportFailed]
+description = "导出失败错误"
+other = "导出失败"
+
+[MsgErrGcDryRunFailed]
+description = "GC 预检失败错误"
+other = "GC 预检失败"
+
+[MsgErrGcFailed]
+description = "GC 执行失败错误"
+other = "GC 执行失败"
+
+[MsgErrCreateDirFailed]
+description = "创建目录失败错误"
+other = "创建目录 {{.Path}} 失败"
+
+[MsgErrWriteConfigFailed]
+description = "写入配置文件失败错误"
+other = "写入配置文件失败"
+
+[MsgErrWriteRefsFailed]
+description = "写入引用文件失败错误"
+other = "写入引用文件失败"
+
+[MsgErrListFailed]
+description = "列表查询失败错误"
+other = "列表查询失败"
+
+[MsgErrAssetNotFound]
+description = "资产不存在错误"
+other = "资产 \"{{.Name}}\" 不存在"
+
+[MsgErrReadManifestFailed]
+description = "无法读取清单错误"
+other = "无法读取清单"
+
+[MsgErrRemoveFailed]
+description = "移除失败错误"
+other = "移除失败"
+
+[MsgErrTrashBackupFailed]
+description = "回收站备份失败错误"
+other = "回收站备份失败"
+
+# ============================================================
+# cobra 内置命令
+# ============================================================
 
 [MsgCmdHelpShort]
 description = "help 命令简短描述"
@@ -29,22 +297,70 @@ other = "查看命令帮助"
 description = "completion 命令简短描述"
 other = "生成自动补全脚本"
 
-[MsgCmdAddShort]
-description = "add 命令简短描述"
-other = "添加资产到仓库"
+# ============================================================
+# cobra 内置 flag
+# ============================================================
 
-[MsgAdded]
-description = "添加资产成功提示"
-other = "已添加: %s (%d 文件, %d bytes)"
+[MsgFlagHelp]
+description = "帮助 flag 描述"
+other = "显示帮助信息"
 
-[MsgListEmpty]
-description = "仓库为空时的提示"
-other = "仓库为空，使用 distill add 添加资产"
+[MsgFlagVersion]
+description = "版本 flag 描述"
+other = "显示版本信息"
 
-[MsgErrAssetNotFound]
-description = "资产不存在错误"
-other = "资产 %q 不存在"
+# ============================================================
+# config 命令
+# ============================================================
 
-[MsgCmdInitShort]
-description = "init 命令简短描述"
-other = "初始化 Distill 仓库"
+[MsgCmdConfigShort]
+description = "config 命令简短描述"
+other = "查看和修改配置"
+
+[MsgCmdConfigLong]
+description = "config 命令详细描述"
+other = "管理 Distill 的配置项。配置文件存储在 <home>/config/config.toml。"
+
+[MsgCmdConfigShowShort]
+description = "config show 简短描述"
+other = "显示配置"
+
+[MsgCmdConfigShowLong]
+description = "config show 详细描述"
+other = "显示所有配置或指定配置项的值。"
+
+[MsgCmdConfigGetShort]
+description = "config get 简短描述"
+other = "获取配置值"
+
+[MsgCmdConfigGetLong]
+description = "config get 详细描述"
+other = "获取指定配置项的值。"
+
+[MsgCmdConfigSetShort]
+description = "config set 简短描述"
+other = "设置配置值"
+
+[MsgCmdConfigSetLong]
+description = "config set 详细描述"
+other = "设置指定配置项的值并写入配置文件。"
+
+# ============================================================
+# cobra 帮助模板
+# ============================================================
+
+[MsgHelpTip]
+description = "帮助底部提示语"
+other = "使用 \"distill [命令] --help\" 获取更多关于某条命令的信息。"
+
+[MsgFlagDefault]
+description = "帮助模板中的默认值标签"
+other = "默认"
+
+# ============================================================
+# 交互提示
+# ============================================================
+
+[MsgWarnLogOpenFailed]
+description = "打开日志文件失败警告"
+other = "警告: 打开日志文件失败"

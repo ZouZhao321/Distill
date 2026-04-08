@@ -33,32 +33,30 @@ var checkoutCmd = &cobra.Command{
 		}
 
 		manifestStore, objectStore := newStores()
-
 		uc := usecase.NewCheckoutUseCase(manifestStore, objectStore)
 		err := uc.Execute(name, outputDir, overwrite)
 		if err != nil {
 			if err == domain.ErrAlreadyExists && overwrite == "ask" {
-				fmt.Printf(domain.T(domain.MsgCheckoutFileExists)+"\n", outputDir)
+				fmt.Println(domain.T(domain.MsgCheckoutFileExists, domain.P{"Path": outputDir}))
 				fmt.Print(domain.T(domain.MsgCheckoutOverwritePrompt))
 				reader := bufio.NewReader(os.Stdin)
 				answer, _ := reader.ReadString('\n')
 				answer = strings.TrimSpace(strings.ToLower(answer))
-
 				if answer == "y" || answer == "yes" {
 					err = uc.Execute(name, outputDir, "force")
 					if err != nil {
-						return fmt.Errorf(domain.T(domain.MsgErrCheckoutFailed), err)
+						return fmt.Errorf("%s: %w", domain.T(domain.MsgErrCheckoutFailed), err)
 					}
 				} else {
 					fmt.Println(domain.T(domain.MsgCheckoutSkipped))
 					return nil
 				}
 			} else {
-				return fmt.Errorf(domain.T(domain.MsgErrCheckoutFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrCheckoutFailed), err)
 			}
 		}
 
-		fmt.Printf(domain.T(domain.MsgCheckedOut)+"\n", name, outputDir)
+		fmt.Println(domain.T(domain.MsgCheckedOut, domain.P{"Name": name, "Output": outputDir}))
 		return nil
 	},
 }

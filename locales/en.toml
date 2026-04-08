@@ -1,6 +1,10 @@
 # Distill CLI English translations
 # go-i18n TOML format
 
+# ============================================================
+# Root command
+# ============================================================
+
 [MsgRootShort]
 description = "Root command short description"
 other = "Distill - Asset Management CLI"
@@ -9,17 +13,281 @@ other = "Distill - Asset Management CLI"
 description = "Root command long description"
 other = "Distill is a Go CLI tool for importing, managing, and exporting assets. Uses content-addressed storage for physical deduplication."
 
-[MsgFlagDefault]
-description = "Default label in help template"
-other = "default"
+[MsgFlagHome]
+description = "Repository path flag description"
+other = "Repository path"
 
-[MsgFlagHelp]
-description = "Help flag description"
-other = "Show help information"
+[MsgFlagLogFormat]
+description = "Log format flag description"
+other = "Log format (text|json)"
 
-[MsgFlagVersion]
-description = "Version flag description"
-other = "Show version information"
+[MsgFlagLogLevel]
+description = "Log level flag description"
+other = "Log level (debug|info|warn|error)"
+
+[MsgFlagLang]
+description = "UI language flag description"
+other = "UI language (zh|en)"
+
+# ============================================================
+# add command
+# ============================================================
+
+[MsgCmdAddShort]
+description = "add command short description"
+other = "Add asset to repository"
+
+[MsgCmdAddLong]
+description = "add command long description"
+other = "Add a file, folder, or ZIP archive to the Distill repository. Uses SHA-256 content addressing for deduplication."
+
+[MsgFlagAs]
+description = "Specify asset name flag description"
+other = "Specify asset name"
+
+[MsgAdded]
+description = "Asset added success message"
+other = "Added: {{.Name}} ({{.FileCount}} files, {{.TotalSize}} bytes)"
+
+# ============================================================
+# checkout command
+# ============================================================
+
+[MsgCmdCheckoutShort]
+description = "checkout command short description"
+other = "Restore asset from repository"
+
+[MsgCmdCheckoutLong]
+description = "checkout command long description"
+other = "Restore a specified asset from the repository to a target directory, preserving the original directory structure."
+
+[MsgFlagOutput]
+description = "Output directory flag description"
+other = "Output directory path"
+
+[MsgFlagOverwrite]
+description = "Overwrite policy flag description"
+other = "Overwrite policy (skip|force|ask)"
+
+[MsgCheckedOut]
+description = "Asset restored success message"
+other = "Restored: {{.Name}} -> {{.Output}}"
+
+[MsgCheckoutFileExists]
+description = "File already exists prompt"
+other = "File already exists: {{.Path}}"
+
+[MsgCheckoutOverwritePrompt]
+description = "Overwrite confirmation prompt"
+other = "Overwrite? (y/N): "
+
+[MsgCheckoutSkipped]
+description = "Checkout skipped message"
+other = "Skipped."
+
+# ============================================================
+# export command
+# ============================================================
+
+[MsgCmdExportShort]
+description = "export command short description"
+other = "Export asset as ZIP archive"
+
+[MsgCmdExportLong]
+description = "export command long description"
+other = "Package and export a specified asset from the repository as a ZIP file."
+
+[MsgExported]
+description = "Asset exported success message"
+other = "Exported: {{.Name}} -> {{.Output}}"
+
+[MsgExportFileExists]
+description = "Output file already exists prompt"
+other = "Output file already exists: {{.Path}}"
+
+[MsgExportOverwritePrompt]
+description = "Overwrite confirmation prompt"
+other = "Overwrite? (y/N): "
+
+[MsgExportSkipped]
+description = "Export skipped message"
+other = "Skipped."
+
+# ============================================================
+# gc command
+# ============================================================
+
+[MsgCmdGcShort]
+description = "gc command short description"
+other = "Garbage collection"
+
+[MsgCmdGcLong]
+description = "gc command long description"
+other = "Clean up orphaned objects not referenced by any manifest to free disk space."
+
+[MsgFlagDryRun]
+description = "Dry run flag description"
+other = "List orphaned objects only, do not delete"
+
+[MsgGcNoOrphans]
+description = "No orphaned objects found message"
+other = "No orphaned objects found."
+
+[MsgGcOrphanList]
+description = "Orphaned objects list message"
+other = "Found {{.Count}} orphaned object(s):"
+
+[MsgGcClean]
+description = "Cleanup complete message"
+other = "Cleaned up {{.Count}} orphaned object(s)."
+
+[MsgGcAlreadyClean]
+description = "Repository already clean message"
+other = "Repository is already clean."
+
+# ============================================================
+# init command
+# ============================================================
+
+[MsgCmdInitShort]
+description = "init command short description"
+other = "Initialize Distill repository"
+
+[MsgCmdInitLong]
+description = "init command long description"
+other = "Create Distill repository directory structure, default config file, and empty reference index at the specified path."
+
+[MsgFlagTrash]
+description = "Trash directory path flag description"
+other = "Trash directory path"
+
+[MsgInited]
+description = "Repository initialized message"
+other = "Distill repository initialized: {{.Path}}"
+
+[MsgTrashPath]
+description = "Trash path message"
+other = "Trash path: {{.Path}}"
+
+# ============================================================
+# list command
+# ============================================================
+
+[MsgCmdListShort]
+description = "list command short description"
+other = "List all assets"
+
+[MsgCmdListLong]
+description = "list command long description"
+other = "Display all imported assets in the repository."
+
+[MsgFlagFormat]
+description = "Output format flag description"
+other = "Output format (table|json)"
+
+[MsgListEmpty]
+description = "Empty repository hint"
+other = "Repository is empty. Use \"distill add\" to add assets"
+
+# ============================================================
+# remove command
+# ============================================================
+
+[MsgCmdRemoveShort]
+description = "remove command short description"
+other = "Remove asset"
+
+[MsgCmdRemoveLong]
+description = "remove command long description"
+other = "Remove a named asset from the repository. Manifests and references will be deleted; object data is retained for GC cleanup."
+
+[MsgRemoved]
+description = "Asset removed success message"
+other = "Removed: {{.Name}}"
+
+# ============================================================
+# Error messages
+# ============================================================
+
+[MsgErrCannotAccess]
+description = "Cannot access path error"
+other = "Cannot access {{.Path}}"
+
+[MsgErrNotRegularFile]
+description = "Not a regular file error"
+other = "{{.Path}} is not a regular file, directory, or ZIP"
+
+[MsgErrCannotOpen]
+description = "Cannot open file error"
+other = "Cannot open {{.Path}}"
+
+[MsgErrReadFailed]
+description = "Failed to read error"
+other = "Failed to read {{.Path}}"
+
+[MsgErrAddFailed]
+description = "Failed to add asset error"
+other = "Failed to add asset"
+
+[MsgErrReadZipFailed]
+description = "Failed to read ZIP error"
+other = "Failed to read ZIP"
+
+[MsgErrReadDirFailed]
+description = "Failed to read directory error"
+other = "Failed to read directory"
+
+[MsgErrCheckoutFailed]
+description = "Failed to checkout error"
+other = "Failed to checkout"
+
+[MsgErrExportFailed]
+description = "Failed to export error"
+other = "Failed to export"
+
+[MsgErrGcDryRunFailed]
+description = "GC dry-run failed error"
+other = "GC dry-run failed"
+
+[MsgErrGcFailed]
+description = "GC failed error"
+other = "GC failed"
+
+[MsgErrCreateDirFailed]
+description = "Failed to create directory error"
+other = "Failed to create directory {{.Path}}"
+
+[MsgErrWriteConfigFailed]
+description = "Failed to write config file error"
+other = "Failed to write config file"
+
+[MsgErrWriteRefsFailed]
+description = "Failed to write refs file error"
+other = "Failed to write refs file"
+
+[MsgErrListFailed]
+description = "Failed to list assets error"
+other = "Failed to list assets"
+
+[MsgErrAssetNotFound]
+description = "Asset not found error"
+other = "Asset \"{{.Name}}\" not found"
+
+[MsgErrReadManifestFailed]
+description = "Failed to read manifest error"
+other = "Failed to read manifest"
+
+[MsgErrRemoveFailed]
+description = "Failed to remove asset error"
+other = "Failed to remove asset"
+
+[MsgErrTrashBackupFailed]
+description = "Trash backup failed error"
+other = "Warning: trash backup failed"
+
+# ============================================================
+# cobra built-in commands
+# ============================================================
 
 [MsgCmdHelpShort]
 description = "help command short description"
@@ -29,22 +297,70 @@ other = "Help about any command"
 description = "completion command short description"
 other = "Generate the autocompletion script for the specified shell"
 
-[MsgCmdAddShort]
-description = "add command short description"
-other = "Add asset to repository"
+# ============================================================
+# cobra built-in flags
+# ============================================================
 
-[MsgAdded]
-description = "Asset added success message"
-other = "Added: %s (%d files, %d bytes)"
+[MsgFlagHelp]
+description = "Help flag description"
+other = "Show help information"
 
-[MsgListEmpty]
-description = "Empty repository hint"
-other = "Repository is empty. Use \"distill add\" to add assets"
+[MsgFlagVersion]
+description = "Version flag description"
+other = "Show version information"
 
-[MsgErrAssetNotFound]
-description = "Asset not found error"
-other = "Asset %q not found"
+# ============================================================
+# config command
+# ============================================================
 
-[MsgCmdInitShort]
-description = "init command short description"
-other = "Initialize Distill repository"
+[MsgCmdConfigShort]
+description = "config command short description"
+other = "View and modify configuration"
+
+[MsgCmdConfigLong]
+description = "config command long description"
+other = "Manage Distill configuration settings. Config file is stored at <home>/config/config.toml."
+
+[MsgCmdConfigShowShort]
+description = "config show short description"
+other = "Show configuration"
+
+[MsgCmdConfigShowLong]
+description = "config show long description"
+other = "Display all configuration settings or a specific setting."
+
+[MsgCmdConfigGetShort]
+description = "config get short description"
+other = "Get configuration value"
+
+[MsgCmdConfigGetLong]
+description = "config get long description"
+other = "Get the value of a specific configuration key."
+
+[MsgCmdConfigSetShort]
+description = "config set short description"
+other = "Set configuration value"
+
+[MsgCmdConfigSetLong]
+description = "config set long description"
+other = "Set a configuration value and write it to the config file."
+
+# ============================================================
+# cobra help template
+# ============================================================
+
+[MsgHelpTip]
+description = "Help template bottom tip"
+other = "Use \"distill [command] --help\" for more information about a command."
+
+[MsgFlagDefault]
+description = "Default label in help template"
+other = "default"
+
+# ============================================================
+# Interactive prompts
+# ============================================================
+
+[MsgWarnLogOpenFailed]
+description = "Warning: failed to open log file"
+other = "Warning: failed to open log file"

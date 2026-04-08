@@ -25,7 +25,7 @@ var addCmd = &cobra.Command{
 
 		info, err := os.Stat(source)
 		if err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrCannotAccess), source, err)
+			return fmt.Errorf("%s: %w", domain.T(domain.MsgErrCannotAccess, domain.P{"Path": source}), err)
 		}
 
 		name := addName
@@ -35,58 +35,69 @@ var addCmd = &cobra.Command{
 
 		manifestStore, objectStore := newStores()
 		uc := usecase.NewAddAssetUseCase(manifestStore, objectStore)
-
 		switch {
 		case info.Mode().IsRegular() && strings.HasSuffix(strings.ToLower(source), ".zip"):
 			zipAdapter := adapter.NewZipAdapter(objectStore, true)
 			tree, err := zipAdapter.Adapt(source)
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrReadZipFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrReadZipFailed), err)
 			}
 			manifest, err := uc.ExecuteForDirectory(usecase.AddAssetInput{
 				Name: name, Tree: tree, Source: source,
 			})
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrAddFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrAddFailed), err)
 			}
-			fmt.Printf(domain.T(domain.MsgAdded)+"\n", manifest.OriginalName, manifest.FileCount, manifest.TotalSize)
+			fmt.Println(domain.T(domain.MsgAdded, domain.P{
+				"Name":      manifest.OriginalName,
+				"FileCount": manifest.FileCount,
+				"TotalSize": manifest.TotalSize,
+			}))
 
 		case info.IsDir():
 			dirAdapter := adapter.NewDirAdapter(objectStore, true)
 			tree, err := dirAdapter.Adapt(source)
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrReadDirFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrReadDirFailed), err)
 			}
 			manifest, err := uc.ExecuteForDirectory(usecase.AddAssetInput{
 				Name: name, Tree: tree, Source: source,
 			})
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrAddFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrAddFailed), err)
 			}
-			fmt.Printf(domain.T(domain.MsgAdded)+"\n", manifest.OriginalName, manifest.FileCount, manifest.TotalSize)
+			fmt.Println(domain.T(domain.MsgAdded, domain.P{
+				"Name":      manifest.OriginalName,
+				"FileCount": manifest.FileCount,
+				"TotalSize": manifest.TotalSize,
+			}))
 
 		default:
 			if !info.Mode().IsRegular() {
-				return fmt.Errorf(domain.T(domain.MsgErrNotRegularFile), source)
+				return fmt.Errorf("%s", domain.T(domain.MsgErrNotRegularFile, domain.P{"Path": source}))
 			}
 			f, err := os.Open(source)
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrCannotOpen), source, err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrCannotOpen, domain.P{"Path": source}), err)
 			}
 			defer f.Close()
 
 			content, err := io.ReadAll(f)
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrReadFailed), source, err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrReadFailed, domain.P{"Path": source}), err)
 			}
 
 			manifest, err := uc.Execute(usecase.AddAssetInput{
 				Name: name, Content: content, Source: source,
 			})
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrAddFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrAddFailed), err)
 			}
-			fmt.Printf(domain.T(domain.MsgAdded)+"\n", manifest.OriginalName, manifest.FileCount, manifest.TotalSize)
+			fmt.Println(domain.T(domain.MsgAdded, domain.P{
+				"Name":      manifest.OriginalName,
+				"FileCount": manifest.FileCount,
+				"TotalSize": manifest.TotalSize,
+			}))
 		}
 
 		return nil

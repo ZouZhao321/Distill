@@ -301,7 +301,7 @@ func setupLogger() {
 	} else {
 		writer = os.Stderr
 		if err != nil {
-			fmt.Fprintf(os.Stderr, domain.T(domain.MsgWarnLogOpenFailed), err)
+			fmt.Fprintf(os.Stderr, "%s: %v\n", domain.T(domain.MsgWarnLogOpenFailed), err)
 		}
 	}
 

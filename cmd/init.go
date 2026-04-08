@@ -28,13 +28,13 @@ var initCmd = &cobra.Command{
 		})
 		if err != nil {
 			if err == usecase.ErrAlreadyInitialized {
-				return fmt.Errorf(domain.T(domain.MsgErrCreateDirFailed), storeHome, err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrCreateDirFailed, domain.P{"Path": storeHome}), err)
 			}
 			return err
 		}
 
-		fmt.Printf(domain.T(domain.MsgInited)+"\n", storeHome)
-		fmt.Printf(domain.T(domain.MsgTrashPath)+"\n", trashPath)
+		fmt.Println(domain.T(domain.MsgInited, domain.P{"Path": storeHome}))
+		fmt.Println(domain.T(domain.MsgTrashPath, domain.P{"Path": trashPath}))
 		return nil
 	},
 }

@@ -33,32 +33,30 @@ var exportCmd = &cobra.Command{
 		}
 
 		manifestStore, objectStore := newStores()
-
 		uc := usecase.NewExportUseCase(manifestStore, objectStore)
 		err := uc.Execute(name, outputPath, overwrite)
 		if err != nil {
 			if err == domain.ErrAlreadyExists && overwrite == "ask" {
-				fmt.Printf(domain.T(domain.MsgExportFileExists)+"\n", outputPath)
+				fmt.Println(domain.T(domain.MsgExportFileExists, domain.P{"Path": outputPath}))
 				fmt.Print(domain.T(domain.MsgExportOverwritePrompt))
 				reader := bufio.NewReader(os.Stdin)
 				answer, _ := reader.ReadString('\n')
 				answer = strings.TrimSpace(strings.ToLower(answer))
-
 				if answer == "y" || answer == "yes" {
 					err = uc.Execute(name, outputPath, "force")
 					if err != nil {
-						return fmt.Errorf(domain.T(domain.MsgErrExportFailed), err)
+						return fmt.Errorf("%s: %w", domain.T(domain.MsgErrExportFailed), err)
 					}
 				} else {
 					fmt.Println(domain.T(domain.MsgExportSkipped))
 					return nil
 				}
 			} else {
-				return fmt.Errorf(domain.T(domain.MsgErrExportFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrExportFailed), err)
 			}
 		}
 
-		fmt.Printf(domain.T(domain.MsgExported)+"\n", name, outputPath)
+		fmt.Println(domain.T(domain.MsgExported, domain.P{"Name": name, "Output": outputPath}))
 		return nil
 	},
 }

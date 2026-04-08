@@ -24,27 +24,27 @@ var removeCmd = &cobra.Command{
 		// 检查资产是否存在
 		ref, err := manifestStore.GetRef(name)
 		if err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrAssetNotFound), name)
+			return fmt.Errorf("%s", domain.T(domain.MsgErrAssetNotFound, domain.P{"Name": name}))
 		}
 
 		// 移除前备份清单到回收站
 		manifest, err := manifestStore.GetManifest(ref.Manifest)
 		if err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrReadManifestFailed), err)
+			return fmt.Errorf("%s: %w", domain.T(domain.MsgErrReadManifestFailed), err)
 		}
 
 		if trashPath != "" {
 			if err := backupToTrash(manifest, trashPath); err != nil {
-				fmt.Fprintf(os.Stderr, domain.T(domain.MsgErrTrashBackupFailed)+"\n", err)
+				fmt.Fprintf(os.Stderr, "%s: %v\n", domain.T(domain.MsgErrTrashBackupFailed), err)
 			}
 		}
 
 		uc := usecase.NewRemoveUseCase(manifestStore)
 		if err := uc.Execute(name); err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrRemoveFailed), err)
+			return fmt.Errorf("%s: %w", domain.T(domain.MsgErrRemoveFailed), err)
 		}
 
-		fmt.Printf(domain.T(domain.MsgRemoved)+"\n", name)
+		fmt.Println(domain.T(domain.MsgRemoved, domain.P{"Name": name}))
 		return nil
 	},
 }

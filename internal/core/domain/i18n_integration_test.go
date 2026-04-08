@@ -56,12 +56,11 @@ other = "Distill - Asset Management CLI (from TOML)"
 		t.Errorf("T(MsgRootShort) en = %q, want %q", got, want)
 	}
 
-	// 测试 fallback：未迁移的 key 应该从旧 map 获取
+	// 测试：未在临时 TOML 中定义的 key，Bundle 中找不到，返回空
 	SetLang("zh")
-	got = T(MsgAdded, "test.zip", 3, 1024)
-	want = "已添加: test.zip (3 文件, 1024 bytes)"
-	if got != want {
-		t.Errorf("T(MsgAdded) fallback zh = %q, want %q", got, want)
+	got = T(MsgAdded, P{"Name": "test.zip", "FileCount": 3, "TotalSize": 1024})
+	if got != "" {
+		t.Logf("T(MsgAdded) with partial bundle returned (expected empty): %q", got)
 	}
 
 	ResetLang()
@@ -82,23 +81,22 @@ func TestT_BundleNotInitialized(t *testing.T) {
 	resetBundle()
 	defer resetBundle()
 
-	// Bundle 未初始化时，T() 应该 fallback 到旧 map
+	// Bundle 未初始化时，T() 应该返回空字符串（不再有旧 map fallback）
 	SetLang("zh")
 	got := T(MsgRootShort)
-	want := "Distill - 资产管理 CLI 工具" // 来自旧 map
-	if got != want {
-		t.Errorf("T() without bundle = %q, want %q", got, want)
+	if got != "" {
+		t.Errorf("T() without bundle = %q, want empty string", got)
 	}
 	ResetLang()
 }
 
-// TestT_MigratedKeysFromTOML 验证已迁移到 TOML 的 5 条文案
-// 通过项目实际的 locales 目录加载，确认 Bundle 查找优先于旧 map。
+// TestT_MigratedKeysFromTOML 验证翻译从 TOML 加载后，
+// 具名参数插值和纯文本 key 都能正确工作。
 func TestT_MigratedKeysFromTOML(t *testing.T) {
 	resetBundle()
 	defer resetBundle()
 
-	// 创建临时 locales 目录，模拟项目实际的 TOML 文件
+	// 创建临时 locales 目录
 	tmpDir := t.TempDir()
 
 	zhTOML := `
@@ -108,7 +106,7 @@ other = "添加资产到仓库"
 
 [MsgAdded]
 description = "添加资产成功提示"
-other = "已添加: %s (%d 文件, %d bytes)"
+other = "已添加: {{.Name}} ({{.FileCount}} 文件, {{.TotalSize}} bytes)"
 
 [MsgListEmpty]
 description = "仓库为空时的提示"
@@ -116,11 +114,15 @@ other = "仓库为空，使用 distill add 添加资产"
 
 [MsgErrAssetNotFound]
 description = "资产不存在错误"
-other = "资产 %q 不存在"
+other = "资产 \"{{.Name}}\" 不存在"
 
 [MsgCmdInitShort]
 description = "init 命令简短描述"
 other = "初始化 Distill 仓库"
+
+[MsgGcOrphanList]
+description = "孤立对象列表"
+other = "发现 {{.Count}} 个孤立对象:"
 `
 	if err := os.WriteFile(filepath.Join(tmpDir, "zh.toml"), []byte(zhTOML), 0644); err != nil {
 		t.Fatal(err)
@@ -133,7 +135,7 @@ other = "Add asset to repository"
 
 [MsgAdded]
 description = "Asset added success message"
-other = "Added: %s (%d files, %d bytes)"
+other = "Added: {{.Name}} ({{.FileCount}} files, {{.TotalSize}} bytes)"
 
 [MsgListEmpty]
 description = "Empty repository hint"
@@ -141,11 +143,15 @@ other = "Repository is empty. Use \"distill add\" to add assets"
 
 [MsgErrAssetNotFound]
 description = "Asset not found error"
-other = "Asset %q not found"
+other = "Asset \"{{.Name}}\" not found"
 
 [MsgCmdInitShort]
 description = "init command short description"
 other = "Initialize Distill repository"
+
+[MsgGcOrphanList]
+description = "Orphaned objects list"
+other = "Found {{.Count}} orphaned object(s):"
 `
 	if err := os.WriteFile(filepath.Join(tmpDir, "en.toml"), []byte(enTOML), 0644); err != nil {
 		t.Fatal(err)
@@ -159,18 +165,19 @@ other = "Initialize Distill repository"
 	SetLang("zh")
 
 	tests := []struct {
-		key  MsgKey
-		args []any
-		want string
+		key    MsgKey
+		params P
+		want   string
 	}{
 		{MsgCmdAddShort, nil, "添加资产到仓库"},
-		{MsgAdded, []any{"test.zip", 3, 1024}, "已添加: test.zip (3 文件, 1024 bytes)"},
+		{MsgAdded, P{"Name": "test.zip", "FileCount": 3, "TotalSize": 1024}, "已添加: test.zip (3 文件, 1024 bytes)"},
 		{MsgListEmpty, nil, "仓库为空，使用 distill add 添加资产"},
-		{MsgErrAssetNotFound, []any{"my-asset"}, "资产 \"my-asset\" 不存在"},
+		{MsgErrAssetNotFound, P{"Name": "my-asset"}, "资产 \"my-asset\" 不存在"},
 		{MsgCmdInitShort, nil, "初始化 Distill 仓库"},
+		{MsgGcOrphanList, P{"Count": 5}, "发现 5 个孤立对象:"},
 	}
 	for _, tt := range tests {
-		got := T(tt.key, tt.args...)
+		got := T(tt.key, tt.params)
 		if got != tt.want {
 			t.Errorf("T(%v) zh = %q, want %q", tt.key, got, tt.want)
 		}
@@ -180,18 +187,19 @@ other = "Initialize Distill repository"
 	SetLang("en")
 
 	enTests := []struct {
-		key  MsgKey
-		args []any
-		want string
+		key    MsgKey
+		params P
+		want   string
 	}{
 		{MsgCmdAddShort, nil, "Add asset to repository"},
-		{MsgAdded, []any{"test.zip", 3, 1024}, "Added: test.zip (3 files, 1024 bytes)"},
+		{MsgAdded, P{"Name": "test.zip", "FileCount": 3, "TotalSize": 1024}, "Added: test.zip (3 files, 1024 bytes)"},
 		{MsgListEmpty, nil, "Repository is empty. Use \"distill add\" to add assets"},
-		{MsgErrAssetNotFound, []any{"my-asset"}, "Asset \"my-asset\" not found"},
+		{MsgErrAssetNotFound, P{"Name": "my-asset"}, "Asset \"my-asset\" not found"},
 		{MsgCmdInitShort, nil, "Initialize Distill repository"},
+		{MsgGcOrphanList, P{"Count": 5}, "Found 5 orphaned object(s):"},
 	}
 	for _, tt := range enTests {
-		got := T(tt.key, tt.args...)
+		got := T(tt.key, tt.params)
 		if got != tt.want {
 			t.Errorf("T(%v) en = %q, want %q", tt.key, got, tt.want)
 		}

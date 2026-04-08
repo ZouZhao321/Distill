@@ -44,7 +44,7 @@ var configShowCmd = &cobra.Command{
 	},
 }
 
-// --- get 子命令（show 的别名） ---
+// --- get 子命令（show 的别名）---
 
 var configGetCmd = &cobra.Command{
 	Use:   "get <key>",
@@ -75,7 +75,6 @@ var configSetCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		key, value := args[0], args[1]
-
 		config, err := loadAppConfig()
 		if err != nil {
 			return err
@@ -87,9 +86,8 @@ var configSetCmd = &cobra.Command{
 
 		configPath := filepath.Join(resolveStoreHome(), "config", "config.toml")
 		if err := domain.SaveConfig(config, configPath); err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrWriteConfigFailed), err)
+			return fmt.Errorf("%s: %w", domain.T(domain.MsgErrWriteConfigFailed), err)
 		}
-
 		fmt.Printf("%s=%s\n", key, value)
 		return nil
 	},

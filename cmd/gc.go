@@ -22,12 +22,12 @@ var gcCmd = &cobra.Command{
 		if gcDryRun {
 			orphans, err := uc.ExecuteDryRun()
 			if err != nil {
-				return fmt.Errorf(domain.T(domain.MsgErrGcDryRunFailed), err)
+				return fmt.Errorf("%s: %w", domain.T(domain.MsgErrGcDryRunFailed), err)
 			}
 			if len(orphans) == 0 {
 				fmt.Println(domain.T(domain.MsgGcNoOrphans))
 			} else {
-				fmt.Printf(domain.T(domain.MsgGcOrphanList)+"\n", len(orphans))
+				fmt.Println(domain.T(domain.MsgGcOrphanList, domain.P{"Count": len(orphans)}))
 				for _, h := range orphans {
 					fmt.Printf("  %s\n", h)
 				}
@@ -37,13 +37,13 @@ var gcCmd = &cobra.Command{
 
 		cleaned, err := uc.Execute()
 		if err != nil {
-			return fmt.Errorf(domain.T(domain.MsgErrGcFailed), err)
+			return fmt.Errorf("%s: %w", domain.T(domain.MsgErrGcFailed), err)
 		}
 
 		if cleaned == 0 {
 			fmt.Println(domain.T(domain.MsgGcAlreadyClean))
 		} else {
-			fmt.Printf(domain.T(domain.MsgGcClean)+"\n", cleaned)
+			fmt.Println(domain.T(domain.MsgGcClean, domain.P{"Count": cleaned}))
 		}
 		return nil
 	},
