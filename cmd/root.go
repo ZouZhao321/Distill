@@ -26,10 +26,12 @@ var localesFS fs.FS
 var version = "v0.1.0-dev" // 默认版本，构建时可通过 -ldflags 覆盖
 
 var rootCmd = &cobra.Command{
-	Use:     "distill",
-	Short:   "distill", // 占位，在 applyLang 中动态设置
-	Long:    "distill",
-	Version: version,
+	Use:           "distill",
+	Short:         "distill", // 占位，在 applyLang 中动态设置
+	Long:          "distill",
+	Version:       version,
+	SilenceErrors: true, // 错误由 Execute() 统一打印，避免 Cobra 重复输出
+	SilenceUsage:  true, // 运行时错误不打印 Usage，避免干扰用户
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		applyLangToCommands(cmd)
 		setupLogger()
