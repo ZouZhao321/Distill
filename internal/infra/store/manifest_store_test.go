@@ -21,7 +21,7 @@ func setupManifestStore(t *testing.T) (*ManifestStore, string) {
 
 func createTestManifest(name string) *domain.Manifest {
 	return &domain.Manifest{
-		Hash:         ComputeHash([]byte(name)),
+		Hash:         domain.ComputeHash([]byte(name)),
 		OriginalName: name,
 		OriginalPath: "/test/" + name,
 		CreatedAt:    "2026-04-04T00:00:00Z",

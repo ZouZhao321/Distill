@@ -1,8 +1,6 @@
 package store
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -72,10 +70,4 @@ func (s *ObjectStore) Walk(fn func(hash string) error) error {
 		hash := filepath.ToSlash(rel) // 统一为正斜杠
 		return fn(hash)
 	})
-}
-
-// ComputeHash 返回数据的 SHA-256 十六进制摘要。
-func ComputeHash(data []byte) string {
-	h := sha256.Sum256(data)
-	return hex.EncodeToString(h[:])
 }

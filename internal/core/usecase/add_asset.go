@@ -3,8 +3,6 @@
 package usecase
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"log/slog"
 	"time"
 
@@ -46,7 +44,7 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 	content := normalizeCRLF(input.Content)
 
 	// 计算哈希并存储对象
-	hash := computeHash(content)
+	hash := domain.ComputeHash(content)
 	if err := uc.store.Write(hash, content); err != nil {
 		return nil, err
 	}
@@ -70,7 +68,7 @@ func (uc *AddAssetUseCase) Execute(input AddAssetInput) (*domain.Manifest, error
 	}
 
 	// 计算清单身份哈希
-	manifest.Hash = computeHash([]byte(manifest.OriginalName + manifest.CreatedAt))
+	manifest.Hash = domain.ComputeHash([]byte(manifest.OriginalName + manifest.CreatedAt))
 
 	// 保存清单并注册引用
 	if err := uc.repo.SaveManifest(manifest); err != nil {
@@ -109,7 +107,7 @@ func (uc *AddAssetUseCase) ExecuteForDirectory(input AddAssetInput) (*domain.Man
 		Tree:         *input.Tree,
 	}
 
-	manifest.Hash = computeHash([]byte(input.Name + now))
+	manifest.Hash = domain.ComputeHash([]byte(input.Name + now))
 
 	if err := uc.repo.SaveManifest(manifest); err != nil {
 		return nil, err
@@ -135,12 +133,6 @@ func countTree(node *domain.TreeNode) (int, int64) {
 		size += s
 	}
 	return count, size
-}
-
-// computeHash 返回数据的 SHA-256 十六进制摘要。
-func computeHash(data []byte) string {
-	h := sha256.Sum256(data)
-	return hex.EncodeToString(h[:])
 }
 
 // normalizeCRLF 将 CRLF 换行替换为 LF。

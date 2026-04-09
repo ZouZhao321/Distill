@@ -41,7 +41,7 @@ func TestGC_Execute(t *testing.T) {
 	store := newMockObjectStorage()
 
 	// Add a referenced object
-	hash := computeHash([]byte("referenced"))
+	hash := domain.ComputeHash([]byte("referenced"))
 	store.Write(hash, []byte("referenced"))
 	repo.SaveManifest(&domain.Manifest{
 		Hash: hash,
@@ -79,7 +79,7 @@ func TestGC_Execute_NoOrphans(t *testing.T) {
 	store := newMockObjectStorage()
 
 	// Add a referenced object
-	hash := computeHash([]byte("kept"))
+	hash := domain.ComputeHash([]byte("kept"))
 	store.Write(hash, []byte("kept"))
 	repo.SaveManifest(&domain.Manifest{
 		Hash: hash,
@@ -101,13 +101,13 @@ func TestGC_ExecuteWithDirectory(t *testing.T) {
 	store := newMockObjectStorage()
 
 	// Simulate a directory manifest with multiple files
-	hash1 := computeHash([]byte("file1"))
-	hash2 := computeHash([]byte("file2"))
+	hash1 := domain.ComputeHash([]byte("file1"))
+	hash2 := domain.ComputeHash([]byte("file2"))
 	store.Write(hash1, []byte("file1"))
 	store.Write(hash2, []byte("file2"))
 
 	repo.SaveManifest(&domain.Manifest{
-		Hash: computeHash([]byte("dir-manifest")),
+		Hash: domain.ComputeHash([]byte("dir-manifest")),
 		Tree: domain.TreeNode{
 			Type: "directory",
 			Children: []domain.TreeNode{

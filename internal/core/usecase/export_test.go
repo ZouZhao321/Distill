@@ -89,8 +89,8 @@ func TestExport_Execute_DirectoryTree(t *testing.T) {
 	repo := newMockAssetRepo()
 	store := newMockObjectStorage()
 
-	hash1 := computeHash([]byte("file1"))
-	hash2 := computeHash([]byte("file2"))
+	hash1 := domain.ComputeHash([]byte("file1"))
+	hash2 := domain.ComputeHash([]byte("file2"))
 	store.Write(hash1, []byte("file1"))
 	store.Write(hash2, []byte("file2"))
 

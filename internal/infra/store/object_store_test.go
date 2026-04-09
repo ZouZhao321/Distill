@@ -127,11 +127,3 @@ func TestObjectStore_Read_NotFound(t *testing.T) {
 		t.Error("Read should return error for nonexistent object")
 	}
 }
-
-func TestComputeHash(t *testing.T) {
-	data := []byte("test")
-	hash := ComputeHash(data)
-	if len(hash) != 64 {
-		t.Errorf("hash length = %d, want 64", len(hash))
-	}
-}

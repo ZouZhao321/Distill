@@ -3,8 +3,6 @@ package adapter
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -61,8 +59,7 @@ func (a *DirAdapter) buildTree(name, path string) (*domain.TreeNode, error) {
 		if a.NormalizeCRLF {
 			content = NormalizeCRLF(content)
 		}
-		hash := sha256.Sum256(content)
-		hashStr := hex.EncodeToString(hash[:])
+		hashStr := domain.ComputeHash(content)
 
 		// 存储对象
 		if err := a.Store.Write(hashStr, content); err != nil {

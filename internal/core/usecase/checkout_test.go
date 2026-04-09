@@ -91,8 +91,8 @@ func TestCheckout_Execute_DirectoryTree(t *testing.T) {
 	repo := newMockAssetRepo()
 	store := newMockObjectStorage()
 
-	hash1 := computeHash([]byte("file1 content"))
-	hash2 := computeHash([]byte("file2 content"))
+	hash1 := domain.ComputeHash([]byte("file1 content"))
+	hash2 := domain.ComputeHash([]byte("file2 content"))
 	store.Write(hash1, []byte("file1 content"))
 	store.Write(hash2, []byte("file2 content"))
 
@@ -139,7 +139,7 @@ func TestCheckout_Execute_RejectsPathTraversalInTree(t *testing.T) {
 	repo := newMockAssetRepo()
 	store := newMockObjectStorage()
 
-	hash := computeHash([]byte("evil"))
+	hash := domain.ComputeHash([]byte("evil"))
 	store.Write(hash, []byte("evil"))
 
 	manifest := &domain.Manifest{
@@ -173,7 +173,7 @@ func TestCheckout_Execute_RejectsDotDotFile(t *testing.T) {
 	repo := newMockAssetRepo()
 	store := newMockObjectStorage()
 
-	hash := computeHash([]byte("evil"))
+	hash := domain.ComputeHash([]byte("evil"))
 	store.Write(hash, []byte("evil"))
 
 	manifest := &domain.Manifest{

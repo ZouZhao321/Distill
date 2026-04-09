@@ -2,8 +2,6 @@ package adapter
 
 import (
 	"archive/zip"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -64,8 +62,7 @@ func (a *ZipAdapter) Adapt(zipPath string) (*domain.TreeNode, error) {
 			data = NormalizeCRLF(data)
 		}
 
-		hash := sha256.Sum256(data)
-		hashStr := hex.EncodeToString(hash[:])
+		hashStr := domain.ComputeHash(data)
 
 		// 存储对象
 		a.Store.Write(hashStr, data)
