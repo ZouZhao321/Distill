@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
@@ -42,6 +43,11 @@ func (a *ZipAdapter) Adapt(zipPath string) (*domain.TreeNode, error) {
 	for _, f := range r.File {
 		if f.FileInfo().IsDir() {
 			continue
+		}
+
+		// 路径安全校验：拒绝路径穿越和绝对路径
+		if err := validateZipEntryName(f.Name); err != nil {
+			return nil, err
 		}
 
 		rc, err := f.Open()
@@ -93,4 +99,39 @@ func (a *ZipAdapter) findOrCreateDir(parent *domain.TreeNode, name string) *doma
 	dir := domain.TreeNode{Name: name, Type: "directory"}
 	parent.Children = append(parent.Children, dir)
 	return &parent.Children[len(parent.Children)-1]
+}
+
+// validateZipEntryName 校验 ZIP 条目路径安全性。
+// 拒绝包含 ".."、"." 段、绝对路径以及空文件名的条目。
+func validateZipEntryName(name string) error {
+	if name == "" {
+		return fmt.Errorf("%w: empty zip entry name", domain.ErrInvalidPath)
+	}
+
+	// 统一使用 / 分割路径
+	cleaned := filepath.ToSlash(name)
+
+	// 拒绝绝对路径（Unix 风格 / 开头或 Windows 风格盘符开头）
+	if strings.HasPrefix(cleaned, "/") || isWindowsAbsPath(cleaned) {
+		return fmt.Errorf("%w: absolute path not allowed: %s", domain.ErrInvalidPath, name)
+	}
+
+	parts := strings.Split(cleaned, "/")
+	for _, part := range parts {
+		if part == "" || part == "." || part == ".." {
+			return fmt.Errorf("%w: unsafe path segment %q in: %s", domain.ErrInvalidPath, part, name)
+		}
+	}
+	return nil
+}
+
+// isWindowsAbsPath 检查路径是否为 Windows 绝对路径（如 C:/... 或 \\server\share）。
+func isWindowsAbsPath(path string) bool {
+	if len(path) >= 3 && path[1] == ':' && (path[2] == '/' || path[2] == '\\') {
+		return true
+	}
+	if len(path) >= 2 && path[0] == '\\' && path[1] == '\\' {
+		return true
+	}
+	return false
 }

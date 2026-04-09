@@ -132,3 +132,72 @@ func TestCheckout_Execute_DirectoryTree(t *testing.T) {
 		t.Errorf("file2 content = %q", string(got2))
 	}
 }
+
+// --- Issue #57: checkout 防御性路径穿越校验 ---
+
+func TestCheckout_Execute_RejectsPathTraversalInTree(t *testing.T) {
+	repo := newMockAssetRepo()
+	store := newMockObjectStorage()
+
+	hash := computeHash([]byte("evil"))
+	store.Write(hash, []byte("evil"))
+
+	manifest := &domain.Manifest{
+		Hash:         "evil-manifest-hash",
+		OriginalName: "evil-asset",
+		Status:       "active",
+		FileCount:    1,
+		TotalSize:    4,
+		Tree: domain.TreeNode{
+			Name: "evil-asset",
+			Type: "directory",
+			Children: []domain.TreeNode{
+				{Name: "..", Type: "directory", Children: []domain.TreeNode{
+					{Name: "escaped.txt", Type: "file", Size: 4, Object: hash},
+				}},
+			},
+		},
+	}
+	repo.SaveManifest(manifest)
+	repo.CreateRef(domain.Ref{Name: "evil-asset", Manifest: manifest.Hash})
+
+	outputDir := t.TempDir()
+	uc := NewCheckoutUseCase(repo, store)
+	err := uc.Execute("evil-asset", outputDir, "force")
+	if err == nil {
+		t.Fatal("expected error for path traversal in tree, got nil")
+	}
+}
+
+func TestCheckout_Execute_RejectsDotDotFile(t *testing.T) {
+	repo := newMockAssetRepo()
+	store := newMockObjectStorage()
+
+	hash := computeHash([]byte("evil"))
+	store.Write(hash, []byte("evil"))
+
+	manifest := &domain.Manifest{
+		Hash:         "evil2-manifest-hash",
+		OriginalName: "evil2-asset",
+		Status:       "active",
+		FileCount:    1,
+		TotalSize:    4,
+		Tree: domain.TreeNode{
+			Name: "evil2-asset",
+			Type: "directory",
+			Children: []domain.TreeNode{
+				{Name: "..evil.txt", Type: "file", Size: 4, Object: hash},
+			},
+		},
+	}
+	repo.SaveManifest(manifest)
+	repo.CreateRef(domain.Ref{Name: "evil2-asset", Manifest: manifest.Hash})
+
+	outputDir := t.TempDir()
+	uc := NewCheckoutUseCase(repo, store)
+	err := uc.Execute("evil2-asset", outputDir, "force")
+	// ..evil.txt 不是路径穿越（不以分隔符分隔的 ".."），应正常还原
+	if err != nil {
+		t.Fatalf("file named '..evil.txt' should be allowed: %v", err)
+	}
+}

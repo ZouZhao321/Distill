@@ -120,3 +120,96 @@ func TestZipAdapter_Adapt_WithCRLF(t *testing.T) {
 		}
 	}
 }
+
+// --- Issue #57: ZIP 路径穿越防护 ---
+
+func TestZipAdapter_Adapt_RejectsDotDotPath(t *testing.T) {
+	zipPath := createTestZip(t, map[string]string{
+		"../../../etc/passwd": "evil content",
+	})
+
+	store := newMockTestStore()
+	ada := NewZipAdapter(store, false)
+
+	_, err := ada.Adapt(zipPath)
+	if err == nil {
+		t.Fatal("expected error for path traversal entry, got nil")
+	}
+}
+
+func TestZipAdapter_Adapt_RejectsDotDotInSubdir(t *testing.T) {
+	zipPath := createTestZip(t, map[string]string{
+		"src/../../evil.txt": "evil content",
+	})
+
+	store := newMockTestStore()
+	ada := NewZipAdapter(store, false)
+
+	_, err := ada.Adapt(zipPath)
+	if err == nil {
+		t.Fatal("expected error for path traversal entry with .. in subdir, got nil")
+	}
+}
+
+func TestZipAdapter_Adapt_RejectsAbsoluteUnixPath(t *testing.T) {
+	zipPath := createTestZip(t, map[string]string{
+		"/etc/passwd": "evil content",
+	})
+
+	store := newMockTestStore()
+	ada := NewZipAdapter(store, false)
+
+	_, err := ada.Adapt(zipPath)
+	if err == nil {
+		t.Fatal("expected error for absolute Unix path entry, got nil")
+	}
+}
+
+func TestZipAdapter_Adapt_RejectsAbsoluteWindowsPath(t *testing.T) {
+	zipPath := createTestZip(t, map[string]string{
+		"C:/Windows/System32/evil.dll": "evil content",
+	})
+
+	store := newMockTestStore()
+	ada := NewZipAdapter(store, false)
+
+	_, err := ada.Adapt(zipPath)
+	if err == nil {
+		t.Fatal("expected error for absolute Windows path entry, got nil")
+	}
+}
+
+func TestZipAdapter_Adapt_RejectsDotPathSegment(t *testing.T) {
+	zipPath := createTestZip(t, map[string]string{
+		"./evil.txt": "evil content",
+	})
+
+	store := newMockTestStore()
+	ada := NewZipAdapter(store, false)
+
+	_, err := ada.Adapt(zipPath)
+	if err == nil {
+		t.Fatal("expected error for '.' path segment entry, got nil")
+	}
+}
+
+func TestZipAdapter_Adapt_AllowsSafePaths(t *testing.T) {
+	zipPath := createTestZip(t, map[string]string{
+		"src/main.go": "package main",
+		"lib/util.go": "package lib",
+		"README.md":   "# Hello",
+		"data/config": "key=value",
+		"a/b/c/d.txt": "deeply nested",
+	})
+
+	store := newMockTestStore()
+	ada := NewZipAdapter(store, false)
+
+	tree, err := ada.Adapt(zipPath)
+	if err != nil {
+		t.Fatalf("Adapt failed for safe paths: %v", err)
+	}
+	if len(tree.Children) != 5 {
+		t.Errorf("expected 5 children, got %d", len(tree.Children))
+	}
+}

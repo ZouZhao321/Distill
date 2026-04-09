@@ -12,3 +12,12 @@ var (
 	ErrEmptySource   = errors.New("source is empty")
 	ErrNotDirectory  = errors.New("path is not a directory")
 )
+
+// ErrWithPathTraversal 表示路径穿越错误。
+type ErrWithPathTraversal struct {
+	Path string
+}
+
+func (e *ErrWithPathTraversal) Error() string {
+	return "path traversal detected: " + e.Path
+}

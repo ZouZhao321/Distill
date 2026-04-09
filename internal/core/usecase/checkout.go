@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ZouZhao321/distill/internal/core/domain"
 	"github.com/ZouZhao321/distill/internal/core/port"
@@ -39,7 +40,25 @@ func (uc *CheckoutUseCase) Execute(name, outputDir, overwrite string) error {
 
 // restoreTree 递归将 TreeNode 树还原到文件系统。
 func restoreTree(store port.ObjectStorage, node domain.TreeNode, targetDir, overwrite string) error {
+	// 防御性校验：拒绝路径穿越节点
+	if node.Name == ".." || node.Name == "." || node.Name == "" {
+		return &domain.ErrWithPathTraversal{Path: node.Name}
+	}
+
 	targetPath := filepath.Join(targetDir, node.Name)
+
+	// 确保还原路径仍在 targetDir 内（深度防御）
+	absTarget, err := filepath.Abs(targetPath)
+	if err != nil {
+		return err
+	}
+	absDir, err := filepath.Abs(targetDir)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(absTarget, absDir+string(filepath.Separator)) && absTarget != absDir {
+		return &domain.ErrWithPathTraversal{Path: targetPath}
+	}
 
 	switch node.Type {
 	case "file":
