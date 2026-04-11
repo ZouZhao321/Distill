@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+    ci:
+      runs-on: ubuntu-latest
+      env:
+        GOPROXY: "https://goproxy.cn,direct"
+        GOCACHE: "/root/.cache/go-build"
+      steps:
+        ##################### 第一阶段：基础构建步骤（失败属于基础错误）#####################
+        - name: Fix git repository URL
+          id: pre_fix_git
+          run: git config --system url."http://gitea:3000/".insteadOf "http://172.24.0.2:3000/"
+        - name: Checkout code
+          id: pre_checkout
+          uses: https://gitea.com/actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Setup Go
+          id: pre_setup_go
+          run: |
+            wget https://mirrors.aliyun.com/golang/go1.26.2.linux-amd64.tar.gz -q -O go.tar.gz
+            rm -rf /usr/local/go && tar -C /usr/local -xzf go.tar.gz
+            echo "PATH=$PATH:/usr/local/go/bin" >> $GITHUB_ENV
+        - name: Cache Go modules
+          id: pre_cache
+          uses: https://gitea.com/actions/cache@v4
+          with:
+            path: |
+              ~/go/pkg/mod
+              ~/.cache/go-build
+            key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+            restore-keys: |
+              ${{ runner.os }}-go-
+        - name: Download dependencies
+          id: pre_deps
+          if: steps.pre_cache.outputs.cache-hit != 'true'
+          run: go mod download
+        ##################### 第二阶段：测试步骤（失败属于业务错误）#####################
+        - name: Unit Test
+          id: test_unit
+          continue-on-error: true # 测试失败不立即终止，继续执行汇总步骤
+          run: go test ./... -v -count=1 -cover
+        - name: E2E Test
+          id: test_e2e
+          continue-on-error: true
+          run: go test ./test/e2e/ -tags=e2e -v -count=1
+        ##################### 第三阶段：结果汇总，区分错误类型 #####################
+        - name: CI Result Summary
+          if: always() # 不管前面步骤是否失败，这步一定会执行
+          run: |
+            # 判断基础构建阶段是否有失败
+            if [ "${{ steps.pre_fix_git.outcome }}" != "success" ] || \
+               [ "${{ steps.pre_checkout.outcome }}" != "success" ] || \
+               [ "${{ steps.pre_setup_go.outcome }}" != "success" ] || \
+               ([ "${{ steps.pre_deps.outcome }}" != "success" ] && [ "${{ steps.pre_deps.outcome }}" != "skipped" ]); then
+              echo "❌ 【基础错误】环境准备/依赖下载失败，请检查CI配置、网络或服务器环境"
+              exit 1 # 基础错误固定退出码1
+            fi
+            # 判断测试阶段是否有失败
+            if [ "${{ steps.test_unit.outcome }}" != "success" ] || [ "${{ steps.test_e2e.outcome }}" != "success" ]; then
+              echo "❌ 【业务错误】单元测试/E2E测试不通过，请检查代码逻辑或业务实现"
+              exit 2 # 业务错误固定退出码2
+            fi
+            # 全部成功
+            echo "✅ CI全部通过！环境正常，测试全过"
+            exit 0

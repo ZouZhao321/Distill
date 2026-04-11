@@ -1,14 +1,19 @@
+SHELL := bash
+
 BINARY_NAME=distill
 VERSION?=v0.1.0-dev
 COMMIT?=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
-.PHONY: build test lint clean release
+.PHONY: build test test-e2e lint clean release
 
 build:
 	CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/ZouZhao321/distill/cmd.version=$(VERSION)" -o $(BINARY_NAME)$(shell go env GOEXE) .
 
 test:
 	go test ./... -v -count=1 -cover
+
+test-e2e:
+	go test ./test/e2e/ -tags=e2e -v -count=1
 
 lint:
 	go vet ./...
