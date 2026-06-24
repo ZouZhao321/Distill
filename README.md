@@ -60,4 +60,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-TBD
+[GNU General Public License v3.0](LICENSE)

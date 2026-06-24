@@ -61,4 +61,4 @@ go build -o distill
 
 ## 许可证
 
-待定
+[GNU 通用公共许可证 v3.0](../LICENSE)
