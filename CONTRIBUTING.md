@@ -25,7 +25,7 @@
 **初始化：**
 
 ```bash
-git clone https://gitea.com/zouzhao/Distill.git
+git clone https://github.com/ZouZhao321/distill.git
 cd Distill
 go mod download
 go build -o distill .
@@ -61,7 +61,7 @@ Distill/
 
 ## 贡献流程
 
-1. **先开 Issue** — 在 Gitea 上创建 Issue，描述要解决的问题或新功能建议，等待讨论确认后再动手
+1. **先开 Issue** — 在 GitHub 上创建 Issue，描述要解决的问题或新功能建议，等待讨论确认后再动手
 2. **Fork 仓库** — Fork 到自己的账号下
 3. **创建分支** — 从最新的 `main` 创建功能分支（见[分支命名](#分支命名)）
 4. **开发与测试** — 编写代码和测试，确保本地检查全部通过

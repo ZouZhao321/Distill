@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      GOPROXY: "https://goproxy.cn,direct"
+    steps:
+      ##################### 第一阶段：基础构建步骤（失败属于基础错误）#####################
+      - name: Checkout code
+        id: pre_checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        id: pre_setup_go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: Cache Go modules
+        id: pre_cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Download dependencies
+        id: pre_deps
+        if: steps.pre_cache.outputs.cache-hit != 'true'
+        run: go mod download
+      ##################### 第二阶段：测试步骤（失败属于业务错误）#####################
+      - name: Unit Test
+        id: test_unit
+        continue-on-error: true
+        run: go test ./... -v -count=1 -cover
+      - name: E2E Test
+        id: test_e2e
+        continue-on-error: true
+        run: go test ./test/e2e/ -tags=e2e -v -count=1
+      ##################### 第三阶段：结果汇总，区分错误类型 #####################
+      - name: CI Result Summary
+        if: always()
+        run: |
+          # 判断基础构建阶段是否有失败
+          if [ "${{ steps.pre_checkout.outcome }}" != "success" ] || \
+             [ "${{ steps.pre_setup_go.outcome }}" != "success" ] || \
+             ([ "${{ steps.pre_deps.outcome }}" != "success" ] && [ "${{ steps.pre_deps.outcome }}" != "skipped" ]); then
+            echo "❌ 【基础错误】环境准备/依赖下载失败，请检查CI配置、网络或服务器环境"
+            exit 1
+          fi
+          # 判断测试阶段是否有失败
+          if [ "${{ steps.test_unit.outcome }}" != "success" ] || [ "${{ steps.test_e2e.outcome }}" != "success" ]; then
+            echo "❌ 【业务错误】单元测试/E2E测试不通过，请检查代码逻辑或业务实现"
+            exit 2
+          fi
+          # 全部成功
+          echo "✅ CI全部通过！环境正常，测试全过"
+          exit 0

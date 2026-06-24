@@ -25,3 +25,4 @@ Thumbs.db
 # Distill data (user's local store)
 test-distill/
 test-trash/
+settings.local.json
